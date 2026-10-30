@@ -1,0 +1,1 @@
+export const server = "https://sadiqbackened-sadiq-313s-projects.vercel.app/api/v2";

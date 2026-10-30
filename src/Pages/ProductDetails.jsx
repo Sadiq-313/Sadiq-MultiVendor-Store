@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { FiHeart, FiShoppingCart, FiMessageCircle } from 'react-icons/fi';
+import { FiHeart, FiShoppingCart } from 'react-icons/fi';
 import { FaStar } from 'react-icons/fa';
+import axios from 'axios';
+import { server } from '../config';
 
 import ZoomImage from '../Component/ZoomImage';
 import ProductCard from '../Component/ProductCard';
-import { products } from '../data/products';
-import { events } from '../data/events';
 import { useShop } from '../context/ShopContext';
 import EventStatus from '../Component/EventStatus';
 
@@ -18,26 +18,54 @@ const tabs = [
 
 const ProductDetails = () => {
   const { slug } = useParams();
-  const { catalog = [], addToCart, toggleWishlist, isInWishlist, notify } = useShop();
+  const { addToCart, toggleWishlist, isInWishlist } = useShop();
 
-  // Combine static products, events, and dynamic context catalog
-  const allProducts = [...products, ...catalog];
-  const allItems = [...allProducts, ...events];
-
-  // Search in combined items list
-  const item = allItems.find(
-    (p) => String(p.slug) === String(slug) || String(p.id) === String(slug)
-  );
-
-  const isEvent = Boolean(item && 'endDate' in item);
-
+  const [item, setItem] = useState(null);
+  const [allItems, setAllItems] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [qty, setQty] = useState(1);
   const [tab, setTab] = useState('details');
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const [prodRes, eventRes] = await Promise.all([
+          axios.get(`${server}/product/get-all-products`),
+          axios.get(`${server}/event/get-all-events`)
+        ]);
+
+        const productsList = prodRes.data.success ? prodRes.data.products || [] : [];
+        const eventsList = eventRes.data.success ? eventRes.data.events || [] : [];
+        const combined = [...productsList, ...eventsList];
+
+        setAllItems(combined);
+
+        const found = combined.find(
+          (p) => String(p._id) === String(slug) || String(p.slug) === String(slug) || String(p.id) === String(slug)
+        );
+        setItem(found || null);
+      } catch (error) {
+        console.error("Error fetching product/event details:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, [slug]);
 
   useEffect(() => {
     setQty(1);
     setTab('details');
   }, [slug]);
+
+  if (loading) {
+    return (
+      <main className="flex min-h-[60vh] items-center justify-center bg-[#f5f5f4] px-4 text-center">
+        <p className="text-base font-semibold text-gray-600">Loading details...</p>
+      </main>
+    );
+  }
 
   if (!item) {
     return (
@@ -53,16 +81,22 @@ const ProductDetails = () => {
     );
   }
 
-  const liked = isInWishlist(item.slug || item.id);
+  const itemId = item._id || item.slug || item.id;
+  const itemImg = item.images?.[0] || item.image;
+  const itemTitle = item.name || item.title;
+  const itemPrice = item.discountPrice || item.originalPrice || item.price;
+  const itemOldPrice = item.originalPrice || item.oldPrice;
+  const isEvent = Boolean(item.endDate);
+  const liked = isInWishlist(itemId);
 
   // Related products logic
-  const sameCategory = allProducts.filter(
-    (p) => p.category === item.category && (p.slug !== item.slug && p.id !== item.id)
+  const sameCategory = allItems.filter(
+    (p) => p.category === item.category && String(p._id || p.slug || p.id) !== String(itemId)
   );
   const related = (
     sameCategory.length > 0
       ? sameCategory
-      : allProducts.filter((p) => p.slug !== item.slug && p.id !== item.id)
+      : allItems.filter((p) => String(p._id || p.slug || p.id) !== String(itemId))
   ).slice(0, 4);
 
   const handleAddToCart = () => {
@@ -77,14 +111,14 @@ const ProductDetails = () => {
           {/* Left side: Image Zoom */}
           <div>
             <ZoomImage
-              src={item.image}
-              alt={item.title}
+              src={itemImg}
+              alt={itemTitle}
               className="aspect-square w-full max-w-[340px]"
             />
 
             <div className="mt-4">
               <div className="inline-block overflow-hidden rounded border-2 border-blue-500 p-1">
-                <img src={item.image} alt={item.title} className="h-16 w-16 object-contain" />
+                <img src={itemImg} alt={itemTitle} className="h-16 w-16 object-contain" />
               </div>
             </div>
           </div>
@@ -97,14 +131,14 @@ const ProductDetails = () => {
               </span>
             )}
 
-            <h1 className="text-2xl font-bold text-gray-900">{item.title}</h1>
+            <h1 className="text-2xl font-bold text-gray-900">{itemTitle}</h1>
             <p className="mt-1 text-sm text-gray-800">{item.description || 'No description provided.'}</p>
 
             <div className="mt-3 flex items-center gap-3">
-              <span className="text-xl font-bold text-gray-900">${item.price}</span>
-              {item.originalPrice && (
+              <span className="text-xl font-bold text-gray-900">\${itemPrice}</span>
+              {itemOldPrice && (
                 <span className="text-sm font-medium text-gray-400 line-through">
-                  ${item.originalPrice}
+                  \${itemOldPrice}
                 </span>
               )}
             </div>
@@ -124,7 +158,7 @@ const ProductDetails = () => {
                 <button
                   type="button"
                   onClick={() => setQty((q) => Math.max(1, q - 1))}
-                  className="w-8 bg-gradient-to-r from-[#3b82f6] to-[#1e40af] text-lg font-bold text-white transition-opacity hover:opacity-90 active:scale-95"
+                  className="w-8 bg-gradient-to-r from-[#3b82f6] to-[#1e40af] text-lg font-bold text-white transition-opacity hover:opacity-90 active:scale-95 cursor-pointer"
                 >
                   -
                 </button>
@@ -134,7 +168,7 @@ const ProductDetails = () => {
                 <button
                   type="button"
                   onClick={() => setQty((q) => q + 1)}
-                  className="w-8 bg-gradient-to-r from-[#3b82f6] to-[#1e40af] text-lg font-bold text-white transition-opacity hover:opacity-90 active:scale-95"
+                  className="w-8 bg-gradient-to-r from-[#3b82f6] to-[#1e40af] text-lg font-bold text-white transition-opacity hover:opacity-90 active:scale-95 cursor-pointer"
                 >
                   +
                 </button>
@@ -142,9 +176,9 @@ const ProductDetails = () => {
 
               <button
                 type="button"
-                onClick={() => toggleWishlist(item.slug || item.id)}
+                onClick={() => toggleWishlist(itemId)}
                 aria-label="Wishlist"
-                className="mr-4 transition-transform hover:scale-110"
+                className="mr-4 transition-transform hover:scale-110 cursor-pointer"
               >
                 <FiHeart className={`text-2xl ${liked ? 'fill-red-500 text-red-500' : 'text-gray-800'}`} />
               </button>
@@ -189,24 +223,24 @@ const ProductDetails = () => {
             {/* ===== SELLER INFORMATION TAB ===== */}
             {tab === 'seller' && (
               <div className="flex items-center gap-3">
-                {item.vendorImage || item.image ? (
+                {item.shop?.avatar || item.vendorImage || itemImg ? (
                   <img
-                    src={item.vendorImage || item.image}
-                    alt={item.vendor || item.sellerName || 'Seller'}
+                    src={item.shop?.avatar || item.vendorImage || itemImg}
+                    alt={item.shop?.name || item.vendor || 'Seller'}
                     className="h-12 w-12 rounded-md object-contain border border-gray-200 bg-white p-1"
                   />
                 ) : (
                   <div className="flex h-12 w-12 items-center justify-center rounded-md bg-blue-100 text-lg font-bold text-[#1e40af]">
-                    {(item.vendor || item.sellerName || 'S').charAt(0)}
+                    {(item.shop?.name || item.vendor || 'S').charAt(0)}
                   </div>
                 )}
 
                 <div className="flex flex-col">
                   <span className="text-sm font-semibold text-blue-500 hover:underline cursor-pointer">
-                    {item.vendor || item.sellerName || 'Verified Seller'}
+                    {item.shop?.name || item.vendor || 'Verified Seller'}
                   </span>
                   <div className="flex items-center gap-1.5 text-xs text-gray-700 mt-0.5">
-                    <span>Rating: {item.rating ? Number(item.rating).toFixed(1) : '4.3'}</span>
+                    <span>Rating: {item.ratings ? Number(item.ratings).toFixed(1) : '4.3'}</span>
                     <FaStar className="text-amber-400 text-xs" />
                   </div>
                 </div>
@@ -222,8 +256,8 @@ const ProductDetails = () => {
           Related Products
         </h2>
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-          {related.map((p, idx) => (
-            <ProductCard key={p.id || p.slug || idx} product={p} />
+          {related.map((p) => (
+            <ProductCard key={p._id || p.slug || p.id} product={p} />
           ))}
         </div>
       </section>

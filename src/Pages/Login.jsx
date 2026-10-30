@@ -1,30 +1,45 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FiMail, FiLock, FiEye, FiEyeOff } from 'react-icons/fi';
+import axios from 'axios';
+import { server } from '../config';
 import { useShop } from '../context/ShopContext';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
   
   const { login, notify } = useShop();
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!email || !password) {
       notify('Please fill in all fields', 'error');
       return;
     }
 
-    // Call Login method from Context
-    const success = login({ email, password });
-    if (success) {
-      notify('Logged in successfully!', 'cart');
-      navigate('/');
-    } else {
-      notify('Invalid credentials', 'error');
+    try {
+      setLoading(true);
+      const { data } = await axios.post(
+        `${server}/user/login-user`,
+        { email, password },
+        { withCredentials: true }
+      );
+
+      if (data.success || data.token) {
+        if (login) login(data.user || { email });
+        notify('Logged in successfully!', 'cart');
+        navigate('/');
+      } else {
+        notify(data.message || 'Invalid credentials', 'error');
+      }
+    } catch (error) {
+      notify(error.response?.data?.message || 'Login failed!', 'error');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -65,7 +80,7 @@ const Login = () => {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer"
               >
                 {showPassword ? <FiEyeOff /> : <FiEye />}
               </button>
@@ -74,9 +89,10 @@ const Login = () => {
 
           <button
             type="submit"
-            className="w-full rounded-lg bg-gradient-to-r from-[#3b82f6] to-[#1e40af] py-2.5 text-sm font-semibold text-white shadow-md transition-all hover:opacity-95 active:scale-95"
+            disabled={loading}
+            className="w-full rounded-lg bg-gradient-to-r from-[#3b82f6] to-[#1e40af] py-2.5 text-sm font-semibold text-white shadow-md transition-all hover:opacity-95 active:scale-95 disabled:opacity-50 cursor-pointer"
           >
-            Sign In
+            {loading ? 'Signing In...' : 'Sign In'}
           </button>
         </form>
 

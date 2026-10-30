@@ -28,7 +28,6 @@ const CreateShop = () => {
     const file = e.target.files[0];
     if (file) {
       setAvatarFile(file);
-      // Base64 conversion image ko localStorage mein save karne ke liye
       const reader = new FileReader();
       reader.onloadend = () => {
         setAvatar(reader.result);
@@ -47,10 +46,8 @@ const CreateShop = () => {
       return;
     }
 
-    // Existing shops fetch karein localStorage se
     const existingShops = JSON.parse(localStorage.getItem('registered_shops') || '[]');
 
-    // Check karein agar email pehle se exists karta hai
     const isAlreadyRegistered = existingShops.some(
       (shop) => shop.email.toLowerCase() === formData.email.toLowerCase()
     );
@@ -60,14 +57,12 @@ const CreateShop = () => {
       return;
     }
 
-    // Nayi shop ka object create karein
     const newShop = {
       ...formData,
       avatar,
       id: Date.now(),
     };
 
-    // Save back to LocalStorage
     localStorage.setItem('registered_shops', JSON.stringify([...existingShops, newShop]));
 
     if (notify) notify('Shop registered successfully! Please login.', 'cart');
@@ -166,7 +161,7 @@ const CreateShop = () => {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
               >
                 {showPassword ? <FiEyeOff /> : <FiEye />}
               </button>
@@ -199,7 +194,7 @@ const CreateShop = () => {
 
           <button
             type="submit"
-            className="w-full rounded-md bg-[#3b00e3] py-2.5 text-xs font-semibold text-white transition-colors hover:bg-indigo-700 mt-2"
+            className="w-full rounded-md bg-[#3b00e3] py-2.5 text-xs font-semibold text-white transition-colors hover:bg-indigo-700 mt-2 cursor-pointer"
           >
             Submit
           </button>

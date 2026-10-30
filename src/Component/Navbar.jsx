@@ -1,40 +1,36 @@
 import React from 'react';
-import { NavLink, Link, useNavigate } from 'react-router-dom';
-import { FiHeart, FiShoppingCart, FiUser } from 'react-icons/fi';
+import { NavLink, useNavigate } from 'react-router-dom';
+import { FiHeart, FiShoppingCart, FiUser, FiLogOut } from 'react-icons/fi';
 import CategoryDropdown from './CategoryDropdown';
 import { useShop } from '../context/ShopContext';
 
 const navLinks = [
   { name: 'Home', path: '/' },
-  { name: 'Best Selling', path: '/Best Selling' },
+  { name: 'Best Selling', path: '/best-selling' },
   { name: 'Products', path: '/products' },
   { name: 'Events', path: '/events' },
   { name: 'FAQ', path: '/faq' },
 ];
 
 const Navbar = () => {
-  const navigate = useNavigate(); // 1. useNavigate hook declare kiya
-  const { wishlistCount, cartCount, openDrawer, user } = useShop(); // 2. user variable destructure kiya
+  const navigate = useNavigate();
+  const { wishlistCount, cartCount, openDrawer, user, logoutUser } = useShop();
 
   const handleProfileClick = () => {
     if (user) {
-      // Agar seller logged in hai -> Seller Dashboard par bhejega
       navigate('/seller-dashboard');
     } else {
-      // Agar logged in nahi hai -> Create Seller Account page par bhejega
-      navigate('/create-shop');
+      navigate('/shop-login');
     }
   };
 
   return (
     <nav className="sticky top-0 z-50 w-full bg-[#3010d0] text-white shadow-md transition-all">
       <div className="flex h-14 w-full items-center justify-between px-4 md:px-12">
+        <CategoryDropdown 
+          onSelect={(name) => navigate(`/products?category=${encodeURIComponent(name)}`)} 
+        />
 
-        {/* 1. All Categories */}
-     <CategoryDropdown 
-  onSelect={(name) => navigate(`/products?category=${encodeURIComponent(name)}`)} />
-
-        {/* 2. Navigation Links */}
         <div className="hidden items-center space-x-8 md:flex">
           {navLinks.map((link) => (
             <NavLink
@@ -52,17 +48,16 @@ const Navbar = () => {
           ))}
         </div>
 
-        {/* 3. Right Side Icons */}
         <div className="flex items-center space-x-6">
           <button
             type="button"
             onClick={() => openDrawer('wishlist')}
             aria-label="Wishlist"
-            className="relative transition-opacity hover:opacity-80 cursor-pointer"
+            className="relative transition-opacity hover:opacity-80 cursor-pointer bg-transparent border-none"
           >
             <FiHeart className="text-2xl" />
             <span className="absolute -right-2 -top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-[#10b981] text-[10px] font-bold text-white">
-              {wishlistCount}
+              {wishlistCount || 0}
             </span>
           </button>
 
@@ -70,23 +65,35 @@ const Navbar = () => {
             type="button"
             onClick={() => openDrawer('cart')}
             aria-label="Cart"
-            className="relative transition-opacity hover:opacity-80 cursor-pointer"
+            className="relative transition-opacity hover:opacity-80 cursor-pointer bg-transparent border-none"
           >
             <FiShoppingCart className="text-2xl" />
             <span className="absolute -right-2 -top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-[#10b981] text-[10px] font-bold text-white">
-              {cartCount}
+              {cartCount || 0}
             </span>
           </button>
 
-          {/* Profile Icon Button */}
           <button
             type="button"
             onClick={handleProfileClick}
             aria-label="Profile"
-            className="transition-opacity hover:opacity-80 flex items-center justify-center border-none bg-transparent cursor-pointer"
+            title={user ? "Go to Dashboard" : "Login / Register"}
+            className="transition-opacity hover:opacity-80 flex items-center justify-center border-none bg-transparent cursor-pointer text-white"
           >
-            <FiUser className="text-2xl" />
+            <FiUser className={`text-2xl ${user ? 'text-[#00ff41]' : 'text-white'}`} />
           </button>
+
+          {user && logoutUser && (
+            <button
+              type="button"
+              onClick={logoutUser}
+              aria-label="Logout"
+              title="Logout"
+              className="transition-opacity hover:opacity-80 flex items-center justify-center border-none bg-transparent cursor-pointer text-red-400 hover:text-red-300"
+            >
+              <FiLogOut className="text-xl" />
+            </button>
+          )}
         </div>
       </div>
     </nav>

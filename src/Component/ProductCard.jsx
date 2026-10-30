@@ -14,7 +14,6 @@ const Stars = ({ rating = 0 }) => (
   </div>
 );
 
-// Icons par click se detail page na khule
 const stop = (e) => {
   e.preventDefault();
   e.stopPropagation();
@@ -22,21 +21,25 @@ const stop = (e) => {
 
 const ProductCard = ({ product }) => {
   const { addToCart, toggleWishlist, isInWishlist, openDrawer } = useShop();
-  const liked = isInWishlist(product.slug);
+  const identifier = product._id || product.slug;
+  const liked = isInWishlist(identifier);
+
+  const imageUrl = product.images?.[0] || product.image;
+  const title = product.name || product.title;
+  const price = product.discountPrice || product.originalPrice || product.price;
 
   return (
     <Link
-      to={`/product/${product.slug}`}
+      to={`/product/${identifier}`}
       className="group relative flex h-full flex-col rounded-lg border border-gray-200 bg-white p-3 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-blue-500 hover:shadow-lg"
     >
-      {/* Right side icons */}
       <div className="absolute right-3 top-3 z-10 flex flex-col gap-3 text-gray-800">
         <button
           type="button"
           aria-label="Wishlist"
           onClick={(e) => {
             stop(e);
-            toggleWishlist(product.slug);
+            toggleWishlist(identifier);
           }}
           className="transition-transform hover:scale-110"
         >
@@ -61,23 +64,21 @@ const ProductCard = ({ product }) => {
         </button>
       </div>
 
-      {/* Image */}
       <div className="flex h-28 w-full items-center justify-center overflow-hidden">
         <img
-          src={product.image}
-          alt={product.title}
+          src={imageUrl}
+          alt={title}
           className="max-h-full max-w-[75%] object-contain transition-transform duration-300 group-hover:scale-105"
         />
       </div>
 
-      {/* Info */}
       <div className="mt-6 flex flex-1 flex-col gap-1.5">
-        <p className="text-[11px] font-medium text-blue-500">{product.vendor}</p>
-        <h3 className="line-clamp-1 text-[13px] font-semibold text-gray-900">{product.title}</h3>
-        <Stars rating={product.rating} />
+        <p className="text-[11px] font-medium text-blue-500">{product.shop?.name || product.vendor || "Official"}</p>
+        <h3 className="line-clamp-1 text-[13px] font-semibold text-gray-900">{title}</h3>
+        <Stars rating={product.ratings || product.rating} />
         <div className="mt-auto flex items-center justify-between pt-1">
-          <span className="text-[13px] font-bold text-gray-900">{product.price}$</span>
-          <span className="text-[11px] font-medium text-emerald-500">{product.sold} sold</span>
+          <span className="text-[13px] font-bold text-gray-900">\${price}</span>
+          <span className="text-[11px] font-medium text-emerald-500">{product.sold_out || product.sold || 0} sold</span>
         </div>
       </div>
     </Link>

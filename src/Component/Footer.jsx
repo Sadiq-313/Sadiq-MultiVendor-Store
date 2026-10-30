@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import axios from 'axios';
+import { server } from '../config';
 
 const columns = [
   {
@@ -17,17 +19,25 @@ const columns = [
 
 const Footer = () => {
   const [email, setEmail] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!email.trim()) return;
-    // TODO: yahan apni API call lagayein
-    setEmail('');
+    try {
+      setLoading(true);
+      const { data } = await axios.post(`${server}/newsletter/subscribe`, { email });
+      alert(data.message || "Subscribed successfully!");
+      setEmail('');
+    } catch (error) {
+      alert(error.response?.data?.message || "Subscription failed!");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <footer className="w-full">
-      {/* ============ SUBSCRIBE STRIP ============ */}
       <div className="bg-[#3329c9]">
         <div className="flex flex-col items-center justify-between gap-6 px-6 py-10 md:flex-row md:px-10">
           <h2 className="text-center text-3xl font-semibold leading-snug text-white md:text-left md:text-4xl">
@@ -46,15 +56,15 @@ const Footer = () => {
             />
             <button
               type="submit"
-              className="rounded-md bg-[#4ade80] px-6 py-3 text-sm font-medium text-white transition-all hover:bg-green-500 active:scale-95"
+              disabled={loading}
+              className="rounded-md bg-[#4ade80] px-6 py-3 text-sm font-medium text-white transition-all hover:bg-green-500 active:scale-95 disabled:opacity-50"
             >
-              Submit
+              {loading ? "Submitting..." : "Submit"}
             </button>
           </form>
         </div>
       </div>
 
-      {/* ============ LINKS ============ */}
       <div className="bg-black">
         <div className="mx-auto grid max-w-6xl grid-cols-2 gap-8 px-6 py-8 md:grid-cols-3 md:px-10">
           {columns.map((col, i) => (

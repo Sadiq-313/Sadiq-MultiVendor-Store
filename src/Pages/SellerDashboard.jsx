@@ -1,36 +1,51 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiPlus, FiTrash2, FiLogOut, FiPackage, FiUploadCloud, FiEdit, FiX } from 'react-icons/fi';
+import axios from 'axios';
+import { server } from '../config';
 import { useShop } from '../context/ShopContext';
 
 const SellerDashboard = () => {
-  const { 
-    user, 
-    logout, 
-    sellerProducts, 
-    addSellerProduct, 
-    editSellerProduct, 
-    updateSellerProduct, 
-    deleteSellerProduct, 
-    notify 
-  } = useShop();
+  const { user, logout, notify } = useShop();
   const navigate = useNavigate();
 
-  // Context function compatibility check
-  const handleUpdateProduct = editSellerProduct || updateSellerProduct;
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const [productData, setProductData] = useState({
-    title: '',
-    price: '',
+    name: '',
+    originalPrice: '',
+    discountPrice: '',
+    stock: '',
     category: 'Computers and Laptops',
     description: '',
   });
 
-  const [imagePreview, setImagePreview] = useState('');
-
-  // Edit Modal State
+  const [images, setImages] = useState([]);
   const [editingProduct, setEditingProduct] = useState(null);
-  const [editImagePreview, setEditImagePreview] = useState('');
+  const [editImages, setEditImages] = useState([]);
+
+  // Fetch seller products from API
+  const fetchSellerProducts = async () => {
+    if (!user || !user._id) return;
+    try {
+      setLoading(true);
+      const { data } = await axios.get(`${server}/product/get-all-products-shop/${user._id}`);
+      if (data.success && data.products) {
+        setProducts(data.products);
+      }
+    } catch (error) {
+      console.error("Error fetching seller products:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (user && user._id) {
+      fetchSellerProducts();
+    }
+  }, [user]);
 
   // Protect route: agar user/seller logged-in nahi hai
   if (!user) {
@@ -40,7 +55,7 @@ const SellerDashboard = () => {
         <p className="text-gray-500 mb-4">Please sign in to your seller account first.</p>
         <button
           onClick={() => navigate('/shop-login')}
-          className="bg-[#3b00e3] text-white px-5 py-2 rounded-lg text-sm font-semibold hover:bg-indigo-700"
+          className="bg-[#3b00e3] text-white px-5 py-2 rounded-lg text-sm font-semibold hover:bg-indigo-700 cursor-pointer"
         >
           Go to Seller Login
         </button>
@@ -53,90 +68,121 @@ const SellerDashboard = () => {
   };
 
   const handleImageUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
+    const files = Array.from(e.target.files);
+    setImages([]);
+
+    files.forEach((file) => {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setImagePreview(reader.result);
+        setImages((prev) => [...prev, reader.result]);
       };
       reader.readAsDataURL(file);
-    }
+    });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!imagePreview) {
-      notify('Please upload a product image!', 'error');
+    if (images.length === 0) {
+      notify('Please upload at least one product image!', 'error');
       return;
     }
 
-    const timestamp = Date.now();
-    const newProduct = {
-      id: timestamp,
-      slug: `${productData.title.toLowerCase().replace(/\s+/g, '-')}-${timestamp}`,
-      title: productData.title,
-      price: parseFloat(productData.price),
-      category: productData.category,
-      description: productData.description,
-      image: imagePreview,
-      sellerEmail: user.email,
-      sellerName: user.shopName || 'Seller',
-    };
+    try {
+      const { data } = await axios.post(`${server}/product/create-product`, {
+        name: productData.name,
+        description: productData.description,
+        category: productData.category,
+        originalPrice: productData.originalPrice,
+        discountPrice: productData.discountPrice,
+        stock: productData.stock,
+        images,
+        shopId: user._id,
+      });
 
-    addSellerProduct(newProduct);
-
-    // Form reset
-    setProductData({
-      title: '',
-      price: '',
-      category: 'Computers and Laptops',
-      description: '',
-    });
-    setImagePreview('');
+      if (data.success) {
+        notify('Product created successfully!', 'cart');
+        setProductData({
+          name: '',
+          originalPrice: '',
+          discountPrice: '',
+          stock: '',
+          category: 'Computers and Laptops',
+          description: '',
+        });
+        setImages([]);
+        fetchSellerProducts();
+      } else {
+        notify(data.message || 'Failed to create product', 'error');
+      }
+    } catch (error) {
+      notify(error.response?.data?.message || 'Error creating product', 'error');
+    }
   };
 
-  // Open Edit Modal
+  const handleDeleteProduct = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this product?')) return;
+    try {
+      const { data } = await axios.delete(`${server}/product/delete-shop-product/${id}`, {
+        withCredentials: true,
+      });
+      if (data.success) {
+        notify('Product deleted successfully', 'remove');
+        fetchSellerProducts();
+      } else {
+        notify(data.message || 'Failed to delete product', 'error');
+      }
+    } catch (error) {
+      notify(error.response?.data?.message || 'Error deleting product', 'error');
+    }
+  };
+
   const handleStartEdit = (product) => {
     setEditingProduct({ ...product });
-    setEditImagePreview(product.image);
+    setEditImages(product.images || []);
   };
 
-  // Edit Form Image Change
   const handleEditImageUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
+    const files = Array.from(e.target.files);
+    const newImages = [];
+
+    files.forEach((file) => {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setEditImagePreview(reader.result);
-        setEditingProduct((prev) => ({ ...prev, image: reader.result }));
+        newImages.push(reader.result);
+        if (newImages.length === files.length) {
+          setEditImages(newImages);
+          setEditingProduct((prev) => ({ ...prev, images: newImages }));
+        }
       };
       reader.readAsDataURL(file);
-    }
+    });
   };
 
-  // Save Edit Changes
-  const handleSaveEdit = (e) => {
+  const handleSaveEdit = async (e) => {
     e.preventDefault();
-    if (!editingProduct.title || !editingProduct.price) {
-      notify('Title and Price are required!', 'error');
+    if (!editingProduct.name || !editingProduct.discountPrice) {
+      notify('Name and Price are required!', 'error');
       return;
     }
 
-    const updatedItem = {
-      ...editingProduct,
-      price: parseFloat(editingProduct.price),
-      image: editImagePreview || editingProduct.image,
-    };
+    try {
+      const { data } = await axios.put(`${server}/product/update-shop-product/${editingProduct._id}`, {
+        ...editingProduct,
+        images: editImages.length > 0 ? editImages : editingProduct.images,
+      });
 
-    if (handleUpdateProduct) {
-      handleUpdateProduct(updatedItem);
-    } else {
-      notify('Product update function not found in ShopContext', 'error');
+      if (data.success) {
+        notify('Product updated successfully!', 'cart');
+        setEditingProduct(null);
+        setEditImages([]);
+        fetchSellerProducts();
+      } else {
+        notify(data.message || 'Failed to update product', 'error');
+      }
+    } catch (error) {
+      notify(error.response?.data?.message || 'Error updating product', 'error');
     }
-
-    setEditingProduct(null);
-    setEditImagePreview('');
   };
 
   const handleLogout = () => {
@@ -145,28 +191,25 @@ const SellerDashboard = () => {
     navigate('/shop-login');
   };
 
-  // Sirf current seller ke products filter karke dikhayenge
-  const myProducts = sellerProducts.filter((p) => p.sellerEmail === user.email);
-
   return (
     <div className="min-h-screen bg-slate-50 p-4 md:p-10">
       {/* Top Header / Profile Bar */}
       <div className="max-w-6xl mx-auto bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-8 flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           <img
-            src={user.avatar || 'https://via.placeholder.com/150'}
+            src={user.avatar?.url || user.avatar || 'https://via.placeholder.com/150'}
             alt="Shop Avatar"
             className="w-14 h-14 rounded-full object-cover border border-slate-200"
           />
           <div>
-            <h1 className="text-xl font-bold text-slate-900">{user.shopName}</h1>
-            <p className="text-xs text-slate-500">{user.email} • {user.phoneNumber}</p>
+            <h1 className="text-xl font-bold text-slate-900">{user.shopName || user.name}</h1>
+            <p className="text-xs text-slate-500">{user.email} • {user.phoneNumber || user.phone}</p>
           </div>
         </div>
 
         <button
           onClick={handleLogout}
-          className="flex items-center gap-2 text-sm font-semibold text-red-600 hover:bg-red-50 px-4 py-2 rounded-lg transition-colors border border-red-200"
+          className="flex items-center gap-2 text-sm font-semibold text-red-600 hover:bg-red-50 px-4 py-2 rounded-lg transition-colors border border-red-200 cursor-pointer"
         >
           <FiLogOut /> Logout
         </button>
@@ -184,8 +227,8 @@ const SellerDashboard = () => {
               <label className="block text-xs font-semibold text-slate-700 mb-1">Product Title *</label>
               <input
                 type="text"
-                name="title"
-                value={productData.title}
+                name="name"
+                value={productData.name}
                 onChange={handleChange}
                 placeholder="e.g. Wireless Headphones"
                 className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-indigo-600 focus:ring-1 focus:ring-blue-600"
@@ -195,14 +238,42 @@ const SellerDashboard = () => {
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Price ($) *</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Original Price (\$)</label>
                 <input
                   type="number"
-                  name="price"
-                  value={productData.price}
+                  name="originalPrice"
+                  value={productData.originalPrice}
+                  onChange={handleChange}
+                  placeholder="120.00"
+                  step="0.01"
+                  className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-indigo-600 focus:ring-1 focus:ring-blue-600"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Price / Sale (\$) *</label>
+                <input
+                  type="number"
+                  name="discountPrice"
+                  value={productData.discountPrice}
                   onChange={handleChange}
                   placeholder="99.99"
                   step="0.01"
+                  className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-indigo-600 focus:ring-1 focus:ring-blue-600"
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Stock *</label>
+                <input
+                  type="number"
+                  name="stock"
+                  value={productData.stock}
+                  onChange={handleChange}
+                  placeholder="10"
                   className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-indigo-600 focus:ring-1 focus:ring-blue-600"
                   required
                 />
@@ -244,26 +315,29 @@ const SellerDashboard = () => {
 
             {/* Image Upload Area */}
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Product Image *</label>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">Product Images *</label>
               <div className="border-2 border-dashed border-slate-300 rounded-lg p-4 text-center hover:bg-slate-50 transition-colors relative cursor-pointer">
-                {imagePreview ? (
-                  <div className="relative">
-                    <img src={imagePreview} alt="Preview" className="h-32 mx-auto object-contain rounded" />
+                {images.length > 0 ? (
+                  <div className="flex flex-wrap gap-2 justify-center">
+                    {images.map((img, idx) => (
+                      <img key={idx} src={img} alt="Preview" className="h-20 w-20 object-contain rounded border" />
+                    ))}
                     <button
                       type="button"
-                      onClick={() => setImagePreview('')}
-                      className="mt-2 text-xs text-red-600 font-semibold underline"
+                      onClick={() => setImages([])}
+                      className="block w-full mt-2 text-xs text-red-600 font-semibold underline"
                     >
-                      Remove & Upload Other
+                      Clear & Upload Other
                     </button>
                   </div>
                 ) : (
                   <label className="cursor-pointer block">
                     <FiUploadCloud className="mx-auto text-3xl text-slate-400 mb-1" />
-                    <span className="text-xs text-slate-600 font-medium">Click to upload image</span>
+                    <span className="text-xs text-slate-600 font-medium">Click to upload images</span>
                     <input
                       type="file"
                       accept="image/*"
+                      multiple
                       onChange={handleImageUpload}
                       className="hidden"
                     />
@@ -274,7 +348,7 @@ const SellerDashboard = () => {
 
             <button
               type="submit"
-              className="w-full bg-[#3b00e3] hover:bg-indigo-700 text-white font-semibold py-2.5 rounded-lg text-xs transition-colors"
+              className="w-full bg-[#3b00e3] hover:bg-indigo-700 text-white font-semibold py-2.5 rounded-lg text-xs transition-colors cursor-pointer"
             >
               Upload Product to Store
             </button>
@@ -288,49 +362,49 @@ const SellerDashboard = () => {
               <FiPackage className="text-slate-900" /> My Live Products
             </span>
             <span className="text-xs font-semibold bg-blue-50 text-slate-900 px-2.5 py-1 rounded-full">
-              {myProducts.length} Items
+              {products.length} Items
             </span>
           </h2>
 
-          {myProducts.length === 0 ? (
+          {loading ? (
+            <div className="text-center py-12 text-slate-400 text-xs">Loading products...</div>
+          ) : products.length === 0 ? (
             <div className="text-center py-12 text-slate-400 text-xs">
               You haven't uploaded any products yet.
             </div>
           ) : (
             <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1">
-              {myProducts.map((product) => (
+              {products.map((product) => (
                 <div
-                  key={product.id}
+                  key={product._id}
                   className="flex items-center justify-between p-3 border border-slate-100 rounded-lg hover:border-slate-300 transition-colors"
                 >
                   <div className="flex items-center gap-3">
                     <img
-                      src={product.image}
-                      alt={product.title}
+                      src={product.images?.[0] || 'https://via.placeholder.com/150'}
+                      alt={product.name}
                       className="w-12 h-12 object-contain rounded border border-slate-100 bg-white"
                     />
                     <div>
-                      <h4 className="text-sm font-semibold text-slate-800">{product.title}</h4>
+                      <h4 className="text-sm font-semibold text-slate-800">{product.name}</h4>
                       <p className="text-xs text-slate-500">
-                        {product.category} • <span className="font-semibold text-slate-900">${product.price}</span>
+                        {product.category} • <span className="font-semibold text-slate-900">\${product.discountPrice}</span>
                       </p>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-1">
-                    {/* Edit Button */}
                     <button
                       onClick={() => handleStartEdit(product)}
-                      className="p-2 text-slate-500 hover:text-slate-900 hover:bg-blue-50 rounded-md transition-colors"
+                      className="p-2 text-slate-500 hover:text-slate-900 hover:bg-blue-50 rounded-md transition-colors cursor-pointer"
                       title="Edit Product"
                     >
                       <FiEdit className="text-base" />
                     </button>
 
-                    {/* Delete Button */}
                     <button
-                      onClick={() => deleteSellerProduct(product.id)}
-                      className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
+                      onClick={() => handleDeleteProduct(product._id)}
+                      className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors cursor-pointer"
                       title="Delete Product"
                     >
                       <FiTrash2 className="text-base" />
@@ -349,7 +423,7 @@ const SellerDashboard = () => {
           <div className="w-full max-w-lg rounded-xl bg-white p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto">
             <button
               onClick={() => setEditingProduct(null)}
-              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 cursor-pointer"
             >
               <FiX className="text-xl" />
             </button>
@@ -361,8 +435,8 @@ const SellerDashboard = () => {
                 <label className="block text-xs font-semibold text-slate-700 mb-1">Product Title</label>
                 <input
                   type="text"
-                  value={editingProduct.title}
-                  onChange={(e) => setEditingProduct({ ...editingProduct, title: e.target.value })}
+                  value={editingProduct.name}
+                  onChange={(e) => setEditingProduct({ ...editingProduct, name: e.target.value })}
                   className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-indigo-600"
                   required
                 />
@@ -370,12 +444,12 @@ const SellerDashboard = () => {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Price ($)</label>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Price (\$)</label>
                   <input
                     type="number"
                     step="0.01"
-                    value={editingProduct.price}
-                    onChange={(e) => setEditingProduct({ ...editingProduct, price: e.target.value })}
+                    value={editingProduct.discountPrice}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, discountPrice: e.target.value })}
                     className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-indigo-600"
                     required
                   />
@@ -413,18 +487,17 @@ const SellerDashboard = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Product Image</label>
-                <div className="flex items-center gap-4">
-                  <img
-                    src={editImagePreview}
-                    alt="Current"
-                    className="h-16 w-16 object-contain border rounded p-1"
-                  />
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Product Images</label>
+                <div className="flex items-center gap-4 flex-wrap">
+                  {(editImages.length > 0 ? editImages : editingProduct.images)?.map((img, idx) => (
+                    <img key={idx} src={img} alt="Current" className="h-16 w-16 object-contain border rounded p-1 bg-white" />
+                  ))}
                   <label className="cursor-pointer bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded text-xs font-semibold">
-                    Change Image
+                    Change Images
                     <input
                       type="file"
                       accept="image/*"
+                      multiple
                       onChange={handleEditImageUpload}
                       className="hidden"
                     />
@@ -436,13 +509,13 @@ const SellerDashboard = () => {
                 <button
                   type="button"
                   onClick={() => setEditingProduct(null)}
-                  className="rounded-lg bg-slate-100 px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-200"
+                  className="rounded-lg bg-slate-100 px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-200 cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="rounded-lg bg-[#3b00e3] px-4 py-2 text-xs font-semibold text-white hover:bg-indigo-700"
+                  className="rounded-lg bg-[#3b00e3] px-4 py-2 text-xs font-semibold text-white hover:bg-indigo-700 cursor-pointer"
                 >
                   Save Changes
                 </button>

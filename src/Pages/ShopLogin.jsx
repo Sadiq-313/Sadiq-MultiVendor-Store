@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FiEye, FiEyeOff } from 'react-icons/fi';
+import axios from 'axios';
+import { server } from '../config';
 import { useShop } from '../context/ShopContext';
 
 const ShopLogin = () => {
@@ -9,34 +11,40 @@ const ShopLogin = () => {
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const { notify, login } = useShop();
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMsg('');
 
-    // Fetch registered shops from localStorage
-    const registeredShops = JSON.parse(localStorage.getItem('registered_shops') || '[]');
+    try {
+      setLoading(true);
+      const { data } = await axios.post(
+        `${server}/shop/login-shop`,
+        { email, password },
+        { withCredentials: true }
+      );
 
-    // Find seller with matching email and password
-    const foundShop = registeredShops.find(
-      (shop) =>
-        shop.email.toLowerCase() === email.trim().toLowerCase() &&
-        shop.password === password
-    );
+      if (data.success || data.token) {
+        const shopData = data.shop || { email };
+        if (login) login(shopData);
+        localStorage.setItem('active_seller', JSON.stringify(shopData));
 
-    if (foundShop) {
-      // Save current active seller in localStorage
-      localStorage.setItem('active_seller', JSON.stringify(foundShop));
-      if (login) login(foundShop);
-
-      if (notify) notify(`Welcome back, ${foundShop.shopName}!`, 'cart');
-      navigate('/seller-dashboard'); // Aap apne Dashboard route par bhej sakte hain
-    } else {
-      setErrorMsg('Invalid email or password. Please register first if you do not have an account.');
-      if (notify) notify('Invalid credentials!', 'error');
+        if (notify) notify(`Welcome back, ${shopData.shopName || shopData.name || 'Seller'}!`, 'cart');
+        navigate('/seller-dashboard');
+      } else {
+        setErrorMsg(data.message || 'Invalid email or password.');
+        if (notify) notify(data.message || 'Invalid credentials!', 'error');
+      }
+    } catch (error) {
+      const errorMsgText = error.response?.data?.message || 'Login failed! Please check your credentials.';
+      setErrorMsg(errorMsgText);
+      if (notify) notify(errorMsgText, 'error');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -76,7 +84,7 @@ const ShopLogin = () => {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
               >
                 {showPassword ? <FiEyeOff /> : <FiEye />}
               </button>
@@ -93,16 +101,17 @@ const ShopLogin = () => {
               />
               Remember me
             </label>
-            <button type="button" className="text-slate-900 hover:underline">
+            <button type="button" className="text-slate-900 hover:underline cursor-pointer">
               Forgot your password?
             </button>
           </div>
 
           <button
             type="submit"
-            className="w-full rounded-md bg-[#3b00e3] py-2.5 text-xs font-semibold text-white transition-colors hover:bg-indigo-700"
+            disabled={loading}
+            className="w-full rounded-md bg-[#3b00e3] py-2.5 text-xs font-semibold text-white transition-colors hover:bg-indigo-700 disabled:opacity-50 cursor-pointer"
           >
-            Sign in
+            {loading ? 'Signing in...' : 'Sign in'}
           </button>
         </form>
 

@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FiSearch, FiChevronRight, FiX } from 'react-icons/fi';
-import { products } from '../data/products'; // Ensure path is correct
+import axios from 'axios';
+import { server } from '../config';
 
 const TopHeader = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -10,22 +11,35 @@ const TopHeader = () => {
   const navigate = useNavigate();
   const dropdownRef = useRef(null);
 
-  // Live search filtering
   useEffect(() => {
-    if (searchTerm.trim() === '') {
-      setFilteredProducts([]);
-      setIsOpen(false);
-    } else {
-      const results = products.filter((p) =>
-        p.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        p.category?.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-      setFilteredProducts(results.slice(0, 5));
-      setIsOpen(true);
-    }
+    const fetchSearchResults = async () => {
+      if (searchTerm.trim() === '') {
+        setFilteredProducts([]);
+        setIsOpen(false);
+        return;
+      }
+      try {
+        const { data } = await axios.get(`${server}/product/get-all-products`);
+        if (data.success) {
+          const results = data.products.filter((p) =>
+            p.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            p.category?.toLowerCase().includes(searchTerm.toLowerCase())
+          );
+          setFilteredProducts(results.slice(0, 5));
+          setIsOpen(true);
+        }
+      } catch (error) {
+        console.error("Search error:", error);
+      }
+    };
+
+    const timer = setTimeout(() => {
+      fetchSearchResults();
+    }, 300);
+
+    return () => clearTimeout(timer);
   }, [searchTerm]);
 
-  // Click outside to close dropdown
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
@@ -36,7 +50,6 @@ const TopHeader = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Handle form submit on enter or search icon click
   const handleSearchSubmit = (e) => {
     e.preventDefault();
     if (searchTerm.trim()) {
@@ -47,18 +60,12 @@ const TopHeader = () => {
 
   return (
     <div className="w-full bg-[#f8f8f8] py-3 px-6 md:px-12 flex items-center justify-between gap-4">
-      {/* 1. Logo Section */}
       <div className="flex items-center">
         <Link to="/">
-          <img 
-            src="../assets/l.png" 
-            alt="Logo" 
-            className="h-10 w-auto object-contain cursor-pointer"
-          />
+          <span className="text-xl font-bold text-blue-700">UrbanCart</span>
         </Link>
       </div>
 
-      {/* 2. Live Search Bar */}
       <div ref={dropdownRef} className="flex-1 max-w-xl mx-4 relative">
         <form onSubmit={handleSearchSubmit} className="relative w-full">
           <input
@@ -84,14 +91,13 @@ const TopHeader = () => {
           </button>
         </form>
 
-        {/* Live Search Results Dropdown */}
         {isOpen && (
           <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-50 max-h-80 overflow-y-auto">
             {filteredProducts.length > 0 ? (
               filteredProducts.map((product) => (
                 <Link
-                  key={product.id || product.slug}
-                  to={`/product/${product.slug}`}
+                  key={product._id || product.slug}
+                  to={`/product/${product._id || product.slug}`}
                   onClick={() => {
                     setIsOpen(false);
                     setSearchTerm('');
@@ -99,16 +105,16 @@ const TopHeader = () => {
                   className="flex items-center gap-3 p-2.5 border-b border-gray-100 hover:bg-blue-50/50 transition-colors"
                 >
                   <img
-                    src={product.image}
-                    alt={product.title}
+                    src={product.images?.[0] || product.image}
+                    alt={product.name || product.title}
                     className="h-10 w-10 object-contain rounded"
                   />
                   <div className="flex flex-col">
                     <span className="text-sm font-medium text-gray-800 line-clamp-1">
-                      {product.title}
+                      {product.name || product.title}
                     </span>
                     <span className="text-xs font-semibold text-slate-900">
-                      ${product.price}
+                      \${product.discountPrice || product.originalPrice || product.price}
                     </span>
                   </div>
                 </Link>
@@ -122,7 +128,6 @@ const TopHeader = () => {
         )}
       </div>
 
-      {/* 3. Become Seller Button */}
       <div>
         <Link to="/create-shop">
           <button 

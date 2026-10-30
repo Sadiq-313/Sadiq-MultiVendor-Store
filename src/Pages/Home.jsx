@@ -1,14 +1,12 @@
-import React from 'react';
-import { Link, useNavigate  } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { FiTruck, FiRefreshCw, FiAward, FiLock } from 'react-icons/fi';
+import axios from 'axios';
+import { server } from '../config';
 
 import ProductCard from '../Component/ProductCard';
-import { products } from '../data/products';
-
 import EventStatus from '../Component/EventStatus';
-import { events } from '../data/events';
 import { useShop } from '../context/ShopContext';
-
 
 // ==================== ASSETS (src/assets) ====================
 import clothingImg from '../assets/clothing-apparel.png';
@@ -31,12 +29,42 @@ import sonyLogo from '../assets/sonylogo.png';
 
 // ==================== HOME ====================
 const Home = () => {
+  const [products, setProducts] = useState([]);
+  const [eventsList, setEventsList] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const navigate = useNavigate();
+  const { addToCart } = useShop();
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [prodRes, eventRes] = await Promise.all([
+          axios.get(`${server}/product/get-all-products`),
+          axios.get(`${server}/event/get-all-events`)
+        ]);
+
+        if (prodRes.data.success) {
+          setProducts(prodRes.data.products || []);
+        }
+        if (eventRes.data.success) {
+          setEventsList(eventRes.data.events || []);
+        }
+      } catch (error) {
+        console.error("Error fetching home data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
   const categories = [
     { title: 'Computers and Laptops', img: macImg },
-    { title: 'Cosmetics and Body Care', img: hpLaptopImg }, // TODO: cosmetics ki sahi image lagayein
+    { title: 'Cosmetics and Body Care', img: hpLaptopImg },
     { title: 'Accessories', img: headphoneImg },
     { title: 'Cloths', img: clothingImg },
-    { title: 'Shoes', img: clothingImg }, // TODO: shoes ki sahi image lagayein
+    { title: 'Shoes', img: clothingImg },
     { title: 'Gifts', img: downloadImg },
     { title: 'Pet Care', img: dogImg },
     { title: 'Mobile and Tablets', img: iphoneImg },
@@ -45,12 +73,22 @@ const Home = () => {
   ];
 
   // Sab se zyada sold wale 5 products
-  const bestDeals = [...products].sort((a, b) => b.sold - a.sold).slice(0, 5);
+  const bestDeals = [...products]
+    .sort((a, b) => (b.sold_out || b.sold || 0) - (a.sold_out || a.sold || 0))
+    .slice(0, 5);
 
-  // data/products.js mein jin par featured: true hai
-  const featuredProducts = products.filter((p) => p.featured).slice(0, 5);
+  // Jin par featured/isFeatured true hai
+  const featuredProducts = products
+    .filter((p) => p.featured || p.isFeatured)
+    .slice(0, 5);
 
-  // PNG logos mein khali jagah hoti hai, is liye unki size bari rakhi hai
+  const popularEvent = eventsList[0] || null;
+  const openEvent = () => {
+    if (popularEvent) {
+      navigate(`/product/${popularEvent._id || popularEvent.slug}`);
+    }
+  };
+
   const brands = [
     { name: 'SONY', logo: sonyLogo, size: 'h-40 w-40 md:h-52 md:w-52' },
     { name: 'LG', logo: lgLogo, size: 'h-40 w-40 md:h-52 md:w-52' },
@@ -60,18 +98,13 @@ const Home = () => {
   ];
 
   const features = [
-    { icon: FiTruck, title: 'Free Shipping', desc: 'From all orders over $100' },
+    { icon: FiTruck, title: 'Free Shipping', desc: 'From all orders over \$100' },
     { icon: FiRefreshCw, title: 'Daily Surprise Offers', desc: 'Save up to 25% off' },
     { icon: FiAward, title: 'Affordable Prices', desc: 'Get Factory direct price' },
     { icon: FiLock, title: 'Secure Payments', desc: '100% protected payments' },
   ];
 
   const headingClass = 'mb-8 text-center text-2xl font-bold text-[#1e40af] md:text-3xl';
-
-  const navigate = useNavigate();
-const { addToCart } = useShop();
-const popularEvent = events.find((e) => e.popular) || events[0];
-const openEvent = () => navigate(`/product/${popularEvent.slug}`);
 
   return (
     <div className="flex min-h-screen w-full flex-col items-center gap-12 bg-[#f8f9fa] px-4 py-8 font-sans md:px-12">
@@ -88,7 +121,7 @@ const openEvent = () => navigate(`/product/${popularEvent.slug}`);
             </span>
 
             <h1 className="text-4xl font-extrabold leading-tight text-[#1e40af] md:text-5xl lg:text-6xl">
-             Sadiq MultiVendor Store
+              Sadiq MultiVendor Store
             </h1>
 
             <p className="max-w-lg text-base leading-relaxed text-gray-600 md:text-lg">
@@ -105,9 +138,8 @@ const openEvent = () => navigate(`/product/${popularEvent.slug}`);
                 Shop Now
               </Link>
 
-              {/* Vendor page banne tak: yeh 404 dikhayega. Path apne hisab se badal lein */}
               <Link
-                to="/vendor"
+                to="/create-shop"
                 className="inline-block rounded-lg border-2 border-blue-600 px-8 py-3 text-center text-sm font-semibold text-blue-700 transition-all hover:bg-[#3b00e3] hover:text-white focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-300 active:scale-95 md:text-base"
               >
                 Become a Vendor
@@ -179,71 +211,93 @@ const openEvent = () => navigate(`/product/${popularEvent.slug}`);
       {/* 4. BEST DEALS */}
       <section className="w-full max-w-7xl">
         <h2 className={headingClass}>Best Deals</h2>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
-          {bestDeals.map((prod) => (
-            <ProductCard key={prod.id} product={prod} />
-          ))}
-        </div>
+        {loading ? (
+          <div className="text-center py-10 text-sm text-gray-500">Loading best deals...</div>
+        ) : bestDeals.length === 0 ? (
+          <div className="text-center py-10 text-sm text-gray-500">No products available.</div>
+        ) : (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
+            {bestDeals.map((prod) => (
+              <ProductCard key={prod._id || prod.slug} product={prod} />
+            ))}
+          </div>
+        )}
       </section>
 
-     {/* 5. POPULAR EVENT */}
-
-
-   <section
-  onClick={openEvent}
-  className="w-full max-w-7xl cursor-pointer rounded-xl border border-gray-100 bg-white p-6 shadow-sm transition-all duration-300 hover:border-blue-500 hover:shadow-lg md:p-8"
->
-  <h2 className="mb-6 text-center text-2xl font-bold text-[#1e40af] md:text-3xl">Popular Event</h2>
-  <div className="grid grid-cols-1 items-center gap-8 md:grid-cols-2">
-    <div className="flex justify-center">
-      <img src={popularEvent.image} alt={popularEvent.title} className="max-h-64 object-contain" />
-    </div>
-
-    <div className="flex flex-col items-start space-y-3">
-      <h3 className="text-2xl font-bold text-[#1e40af]">{popularEvent.title}</h3>
-      <p className="text-sm text-gray-500">{popularEvent.description}</p>
-
-      <div className="flex w-full items-center gap-3">
-        {popularEvent.oldPrice && (
-          <span className="text-sm text-red-500 line-through">${popularEvent.oldPrice}</span>
-        )}
-        <span className="text-2xl font-bold text-gray-900">${popularEvent.price}</span>
-        <span className="ml-auto text-xs font-semibold text-indigo-600">{popularEvent.sold} sold</span>
-      </div>
-
-      <EventStatus endDate={popularEvent.endDate} />
-
-      <div className="flex gap-3 pt-2">
-        <Link
-          to={`/product/${popularEvent.slug}`}
-          onClick={(e) => e.stopPropagation()}
-          className="inline-block rounded-md bg-gradient-to-r from-[#3b82f6] to-[#1e40af] px-5 py-2.5 text-xs font-semibold text-white transition-all hover:shadow-lg active:scale-95"
+      {/* 5. POPULAR EVENT */}
+      {popularEvent && (
+        <section
+          onClick={openEvent}
+          className="w-full max-w-7xl cursor-pointer rounded-xl border border-gray-100 bg-white p-6 shadow-sm transition-all duration-300 hover:border-blue-500 hover:shadow-lg md:p-8"
         >
-          See Details
-        </Link>
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            addToCart(popularEvent, 1);
-          }}
-          className="rounded-md border-2 border-blue-600 px-5 py-2.5 text-xs font-semibold text-blue-700 transition-colors hover:bg-[#3b00e3] hover:text-white active:scale-95"
-        >
-          Add to Cart
-        </button>
-      </div>
-    </div>
-  </div>
-</section>
+          <h2 className="mb-6 text-center text-2xl font-bold text-[#1e40af] md:text-3xl">Popular Event</h2>
+          <div className="grid grid-cols-1 items-center gap-8 md:grid-cols-2">
+            <div className="flex justify-center">
+              <img
+                src={popularEvent.images?.[0] || popularEvent.image}
+                alt={popularEvent.name || popularEvent.title}
+                className="max-h-64 object-contain"
+              />
+            </div>
+
+            <div className="flex flex-col items-start space-y-3">
+              <h3 className="text-2xl font-bold text-[#1e40af]">{popularEvent.name || popularEvent.title}</h3>
+              <p className="text-sm text-gray-500">{popularEvent.description}</p>
+
+              <div className="flex w-full items-center gap-3">
+                {(popularEvent.originalPrice || popularEvent.oldPrice) && (
+                  <span className="text-sm text-red-500 line-through">
+                    \${popularEvent.originalPrice || popularEvent.oldPrice}
+                  </span>
+                )}
+                <span className="text-2xl font-bold text-gray-900">
+                  \${popularEvent.discountPrice || popularEvent.price}
+                </span>
+                <span className="ml-auto text-xs font-semibold text-indigo-600">
+                  {popularEvent.sold_out || popularEvent.sold || 0} sold
+                </span>
+              </div>
+
+              <EventStatus endDate={popularEvent.endDate || '2026-12-31T00:00:00'} />
+
+              <div className="flex gap-3 pt-2">
+                <Link
+                  to={`/product/${popularEvent._id || popularEvent.slug}`}
+                  onClick={(e) => e.stopPropagation()}
+                  className="inline-block rounded-md bg-gradient-to-r from-[#3b82f6] to-[#1e40af] px-5 py-2.5 text-xs font-semibold text-white transition-all hover:shadow-lg active:scale-95 cursor-pointer"
+                >
+                  See Details
+                </Link>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    addToCart(popularEvent, 1);
+                  }}
+                  className="rounded-md border-2 border-blue-600 px-5 py-2.5 text-xs font-semibold text-blue-700 transition-colors hover:bg-[#3b00e3] hover:text-white active:scale-95 cursor-pointer"
+                >
+                  Add to Cart
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* 6. FEATURED PRODUCTS */}
       <section className="w-full max-w-7xl">
         <h2 className={headingClass}>Featured Products</h2>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
-          {featuredProducts.map((prod) => (
-            <ProductCard key={prod.id} product={prod} />
-          ))}
-        </div>
+        {loading ? (
+          <div className="text-center py-10 text-sm text-gray-500">Loading featured products...</div>
+        ) : featuredProducts.length === 0 ? (
+          <div className="text-center py-10 text-sm text-gray-500">No featured products found.</div>
+        ) : (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
+            {featuredProducts.map((prod) => (
+              <ProductCard key={prod._id || prod.slug} product={prod} />
+            ))}
+          </div>
+        )}
       </section>
 
       {/* 7. BRAND LOGOS */}

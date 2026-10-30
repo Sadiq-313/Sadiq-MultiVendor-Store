@@ -1,27 +1,10 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { FiHeart, FiEye, FiShoppingCart } from 'react-icons/fi';
 import { FaStar, FaStarHalfAlt, FaRegStar } from 'react-icons/fa';
+import axios from 'axios';
+import { server } from '../config';
 
-import logoImg from '../assets/logocard.png';
-import ballImg from '../assets/ball.png';
-import houseDetailImg from '../assets/housedetail.png';
-import batImg from '../assets/bat.png';
-import macImg from '../assets/mac.png';
-import victusImg from '../assets/uv9woxgz4fm9lf091squ.jpg';
-import hpLaptopImg from '../assets/hplaptop.jpg';
-
-const products = [
-  { id: 1, slug: 'orange', vendor: 'WOW SHOP', title: 'orange', rating: 0, price: 20, sold: 10, image: logoImg },
-  { id: 2, slug: 'leather-ball', vendor: 'SK Sports', title: 'Leather Ball', rating: 0, price: 10, sold: 8, image: ballImg },
-  { id: 3, slug: 'green-view', vendor: 'WOW SHOP', title: 'Green View', rating: 0, price: 12, sold: 5, image: houseDetailImg },
-  { id: 4, slug: 'bat', vendor: 'SK Sports', title: 'Bat', rating: 0, price: 900, sold: 3, image: batImg },
-  { id: 5, slug: 'macbook-14-pro', vendor: 'Omair Electronics', title: 'Macbook 14 pro', rating: 4.5, price: 8000, sold: 1, image: macImg },
-  { id: 6, slug: 'hp-victus-16', vendor: 'Omair Electronics Jhelum', title: 'Hp Victus 16', rating: 0, price: 90, sold: 0, image: victusImg },
-  { id: 7, slug: 'hp-laptop-15', vendor: 'Omair Electronics Jhelum', title: 'Hp Laptop 15', rating: 0, price: 800, sold: 0, image: hpLaptopImg },
-];
-
-// Stars: khali, aadha ya poora
 const Stars = ({ rating = 0 }) => (
   <div className="flex items-center gap-1 text-amber-400">
     {[1, 2, 3, 4, 5].map((n) => {
@@ -32,62 +15,96 @@ const Stars = ({ rating = 0 }) => (
   </div>
 );
 
-// Single card
-const ProductCard = ({ product }) => (
-  <div className="group relative flex h-full flex-col rounded-lg border border-gray-200 bg-white p-3 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-blue-500 hover:shadow-lg">
-    {/* Right side icons */}
-    <div className="absolute right-3 top-3 z-10 flex flex-col gap-3 text-gray-800">
-      <button type="button" aria-label="Wishlist" className="transition-colors hover:text-red-500">
-        <FiHeart className="text-lg" />
-      </button>
-      <Link to={`/product/${product.slug}`} aria-label="View product" className="transition-colors hover:text-slate-900">
-        <FiEye className="text-lg" />
+const ProductCard = ({ product }) => {
+  const pId = product._id || product.slug;
+  const pImg = product.images?.[0] || product.image;
+  const pTitle = product.name || product.title;
+  const pPrice = product.discountPrice || product.originalPrice || product.price;
+  const pVendor = product.shop?.name || product.vendor || "Official";
+  const pRating = product.ratings || product.rating || 0;
+  const pSold = product.sold_out || product.sold || 0;
+
+  return (
+    <div className="group relative flex h-full flex-col rounded-lg border border-gray-200 bg-white p-3 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-blue-500 hover:shadow-lg">
+      <div className="absolute right-3 top-3 z-10 flex flex-col gap-3 text-gray-800">
+        <button type="button" aria-label="Wishlist" className="transition-colors hover:text-red-500 cursor-pointer">
+          <FiHeart className="text-lg" />
+        </button>
+        <Link to={`/product/${pId}`} aria-label="View product" className="transition-colors hover:text-slate-900">
+          <FiEye className="text-lg" />
+        </Link>
+        <button type="button" aria-label="Add to cart" className="transition-colors hover:text-green-600 cursor-pointer">
+          <FiShoppingCart className="text-lg" />
+        </button>
+      </div>
+
+      <Link
+        to={`/product/${pId}`}
+        className="flex h-28 w-full items-center justify-center overflow-hidden"
+      >
+        <img
+          src={pImg}
+          alt={pTitle}
+          className="max-h-full max-w-[75%] object-contain transition-transform duration-300 group-hover:scale-105"
+        />
       </Link>
-      <button type="button" aria-label="Add to cart" className="transition-colors hover:text-green-600">
-        <FiShoppingCart className="text-lg" />
-      </button>
-    </div>
 
-    {/* Image */}
-    <Link
-      to={`/product/${product.slug}`}
-      className="flex h-28 w-full items-center justify-center overflow-hidden"
-    >
-      <img
-        src={product.image}
-        alt={product.title}
-        className="max-h-full max-w-[75%] object-contain transition-transform duration-300 group-hover:scale-105"
-      />
-    </Link>
+      <div className="mt-6 flex flex-1 flex-col gap-1.5">
+        <p className="text-[11px] font-medium text-blue-500">{pVendor}</p>
+        <Link to={`/product/${pId}`}>
+          <h3 className="line-clamp-1 text-[13px] font-semibold text-gray-900 hover:text-blue-600">{pTitle}</h3>
+        </Link>
+        <Stars rating={pRating} />
 
-    {/* Info */}
-    <div className="mt-6 flex flex-1 flex-col gap-1.5">
-      <p className="text-[11px] font-medium text-blue-500">{product.vendor}</p>
-      <Link to={`/product/${product.slug}`}>
-        <h3 className="line-clamp-1 text-[13px] font-semibold text-gray-900">{product.title}</h3>
-      </Link>
-      <Stars rating={product.rating} />
-
-      <div className="mt-auto flex items-center justify-between pt-1">
-        <span className="text-[13px] font-bold text-gray-900">{product.price}$</span>
-        <span className="text-[11px] font-medium text-emerald-500">{product.sold} sold</span>
+        <div className="mt-auto flex items-center justify-between pt-1">
+          <span className="text-[13px] font-bold text-gray-900">\${pPrice}</span>
+          <span className="text-[11px] font-medium text-emerald-500">{pSold} sold</span>
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
-// Page
 const BestSelling = () => {
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const { data } = await axios.get(`${server}/product/get-all-products`);
+        if (data.success && data.products) {
+          setProducts(data.products);
+        }
+      } catch (error) {
+        console.error("Error fetching products:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProducts();
+  }, []);
+
   // Sab se zyada sold wale pehle
-  const sorted = [...products].sort((a, b) => b.sold - a.sold);
+  const sorted = [...products].sort((a, b) => (b.sold_out || b.sold || 0) - (a.sold_out || a.sold || 0));
 
   return (
     <main className="min-h-screen bg-[#f5f5f4] px-4 py-6 md:px-12">
-      <div className="mx-auto grid max-w-7xl grid-cols-1 gap-5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
-        {sorted.map((p) => (
-          <ProductCard key={p.id} product={p} />
-        ))}
-      </div>
+      {loading ? (
+        <div className="flex h-[50vh] items-center justify-center">
+          <p className="text-sm font-semibold text-gray-600">Loading best selling products...</p>
+        </div>
+      ) : sorted.length === 0 ? (
+        <div className="flex h-[50vh] items-center justify-center">
+          <p className="text-sm font-semibold text-gray-600">No products found!</p>
+        </div>
+      ) : (
+        <div className="mx-auto grid max-w-7xl grid-cols-1 gap-5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
+          {sorted.map((p) => (
+            <ProductCard key={p._id || p.slug} product={p} />
+          ))}
+        </div>
+      )}
     </main>
   );
 };

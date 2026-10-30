@@ -3,18 +3,14 @@ import { Link } from 'react-router-dom';
 import { FiX, FiShoppingBag, FiHeart, FiTrash2, FiPlus, FiMinus } from 'react-icons/fi';
 import { useShop } from '../context/ShopContext';
 
-// Right side se aane wala dabba (overlay + panel)
 const Shell = ({ open, onClose, icon: Icon, title, children, footer }) => (
   <>
-    {/* Dhundhla background */}
     <div
       onClick={onClose}
       className={`fixed inset-0 z-[60] bg-black/40 transition-opacity duration-300 ${
         open ? 'opacity-100' : 'pointer-events-none opacity-0'
       }`}
     />
-
-    {/* Panel */}
     <aside
       aria-hidden={!open}
       className={`fixed right-0 top-0 z-[70] flex h-full w-full max-w-sm flex-col bg-white shadow-2xl transition-[transform,visibility] duration-300 ${
@@ -26,7 +22,7 @@ const Shell = ({ open, onClose, icon: Icon, title, children, footer }) => (
           <Icon className="text-xl" />
           {title}
         </div>
-        <button type="button" onClick={onClose} aria-label="Close" className="text-gray-700 transition-colors hover:text-red-500">
+        <button type="button" onClick={onClose} aria-label="Close" className="text-gray-700 transition-colors hover:text-red-500 cursor-pointer">
           <FiX className="text-2xl" />
         </button>
       </div>
@@ -60,7 +56,6 @@ const Drawers = () => {
     addToCart,
   } = useShop();
 
-  // Esc dabane par band + drawer khula ho to page scroll band
   useEffect(() => {
     const onKey = (e) => e.key === 'Escape' && closeDrawer();
     document.addEventListener('keydown', onKey);
@@ -73,7 +68,6 @@ const Drawers = () => {
 
   return (
     <>
-      {/* ================= CART ================= */}
       <Shell
         open={drawer === 'cart'}
         onClose={closeDrawer}
@@ -84,18 +78,18 @@ const Drawers = () => {
             <div className="space-y-3">
               <div className="flex items-center justify-between text-sm font-semibold text-gray-900">
                 <span>Subtotal</span>
-                <span className="text-base">{cartTotal}$</span>
+                <span className="text-base">\${cartTotal}</span>
               </div>
               <button
                 type="button"
-                className="w-full rounded-md bg-black py-2.5 text-sm font-semibold text-white transition-all hover:bg-gray-800 active:scale-95"
+                className="w-full rounded-md bg-black py-2.5 text-sm font-semibold text-white transition-all hover:bg-gray-800 active:scale-95 cursor-pointer"
               >
                 Checkout
               </button>
               <button
                 type="button"
                 onClick={closeDrawer}
-                className="w-full rounded-md border-2 border-blue-600 py-2 text-sm font-semibold text-blue-700 transition-colors hover:bg-[#3b00e3] hover:text-white"
+                className="w-full rounded-md border-2 border-blue-600 py-2 text-sm font-semibold text-blue-700 transition-colors hover:bg-blue-700 hover:text-white cursor-pointer"
               >
                 Continue shopping
               </button>
@@ -107,63 +101,69 @@ const Drawers = () => {
           <Empty text="No item in the cart!" />
         ) : (
           <ul>
-            {cartItems.map(({ product, qty }) => (
-              <li key={product.slug} className="flex gap-3 border-b border-gray-100 py-4">
-                <Link
-                  to={`/product/${product.slug}`}
-                  onClick={closeDrawer}
-                  className="flex h-20 w-20 flex-shrink-0 items-center justify-center overflow-hidden rounded bg-gray-50"
-                >
-                  <img src={product.image} alt={product.title} className="h-full w-full object-contain" />
-                </Link>
+            {cartItems.map(({ product, qty }) => {
+              const pId = product._id || product.slug;
+              const pImg = product.images?.[0] || product.image;
+              const pTitle = product.name || product.title;
+              const pPrice = product.discountPrice || product.originalPrice || product.price;
 
-                <div className="flex min-w-0 flex-1 flex-col gap-1">
+              return (
+                <li key={pId} className="flex gap-3 border-b border-gray-100 py-4">
                   <Link
-                    to={`/product/${product.slug}`}
+                    to={`/product/${pId}`}
                     onClick={closeDrawer}
-                    className="line-clamp-1 text-sm font-semibold text-gray-900 hover:text-slate-900"
+                    className="flex h-20 w-20 flex-shrink-0 items-center justify-center overflow-hidden rounded bg-gray-50"
                   >
-                    {product.title}
+                    <img src={pImg} alt={pTitle} className="h-full w-full object-contain" />
                   </Link>
-                  <p className="text-xs text-blue-500">{product.vendor}</p>
-                  <p className="text-sm font-bold text-gray-900">{product.price}$</p>
 
-                  <div className="mt-1 flex w-fit items-center overflow-hidden rounded border border-gray-200">
-                    <button
-                      type="button"
-                      onClick={() => changeQty(product.slug, -1)}
-                      aria-label="Kam karein"
-                      className="px-2 py-1 text-gray-700 transition-colors hover:bg-gray-100"
+                  <div className="flex min-w-0 flex-1 flex-col gap-1">
+                    <Link
+                      to={`/product/${pId}`}
+                      onClick={closeDrawer}
+                      className="line-clamp-1 text-sm font-semibold text-gray-900 hover:text-blue-600"
                     >
-                      <FiMinus className="text-xs" />
-                    </button>
-                    <span className="min-w-[28px] text-center text-xs font-semibold">{qty}</span>
-                    <button
-                      type="button"
-                      onClick={() => changeQty(product.slug, 1)}
-                      aria-label="Zyada karein"
-                      className="px-2 py-1 text-gray-700 transition-colors hover:bg-gray-100"
-                    >
-                      <FiPlus className="text-xs" />
-                    </button>
+                      {pTitle}
+                    </Link>
+                    <p className="text-xs text-blue-500">{product.shop?.name || product.vendor}</p>
+                    <p className="text-sm font-bold text-gray-900">\${pPrice}</p>
+
+                    <div className="mt-1 flex w-fit items-center overflow-hidden rounded border border-gray-200">
+                      <button
+                        type="button"
+                        onClick={() => changeQty(pId, -1)}
+                        aria-label="Decrease quantity"
+                        className="px-2 py-1 text-gray-700 transition-colors hover:bg-gray-100 cursor-pointer"
+                      >
+                        <FiMinus className="text-xs" />
+                      </button>
+                      <span className="min-w-[28px] text-center text-xs font-semibold">{qty}</span>
+                      <button
+                        type="button"
+                        onClick={() => changeQty(pId, 1)}
+                        aria-label="Increase quantity"
+                        className="px-2 py-1 text-gray-700 transition-colors hover:bg-gray-100 cursor-pointer"
+                      >
+                        <FiPlus className="text-xs" />
+                      </button>
+                    </div>
                   </div>
-                </div>
 
-                <button
-                  type="button"
-                  onClick={() => removeFromCart(product.slug)}
-                  aria-label="Hata dein"
-                  className="self-start text-gray-400 transition-colors hover:text-red-500"
-                >
-                  <FiTrash2 className="text-lg" />
-                </button>
-              </li>
-            ))}
+                  <button
+                    type="button"
+                    onClick={() => removeFromCart(pId)}
+                    aria-label="Remove item"
+                    className="self-start text-gray-400 transition-colors hover:text-red-500 cursor-pointer"
+                  >
+                    <FiTrash2 className="text-lg" />
+                  </button>
+                </li>
+              );
+            })}
           </ul>
         )}
       </Shell>
 
-      {/* ================= WISHLIST ================= */}
       <Shell
         open={drawer === 'wishlist'}
         onClose={closeDrawer}
@@ -174,49 +174,56 @@ const Drawers = () => {
           <Empty text="Wishlist is empty!" />
         ) : (
           <ul>
-            {wishlistItems.map((product) => (
-              <li key={product.slug} className="flex gap-3 border-b border-gray-100 py-4">
-                <Link
-                  to={`/product/${product.slug}`}
-                  onClick={closeDrawer}
-                  className="flex h-20 w-20 flex-shrink-0 items-center justify-center overflow-hidden rounded bg-gray-50"
-                >
-                  <img src={product.image} alt={product.title} className="h-full w-full object-contain" />
-                </Link>
+            {wishlistItems.map((product) => {
+              const pId = product._id || product.slug;
+              const pImg = product.images?.[0] || product.image;
+              const pTitle = product.name || product.title;
+              const pPrice = product.discountPrice || product.originalPrice || product.price;
 
-                <div className="flex min-w-0 flex-1 flex-col gap-1">
+              return (
+                <li key={pId} className="flex gap-3 border-b border-gray-100 py-4">
                   <Link
-                    to={`/product/${product.slug}`}
+                    to={`/product/${pId}`}
                     onClick={closeDrawer}
-                    className="line-clamp-1 text-sm font-semibold text-gray-900 hover:text-slate-900"
+                    className="flex h-20 w-20 flex-shrink-0 items-center justify-center overflow-hidden rounded bg-gray-50"
                   >
-                    {product.title}
+                    <img src={pImg} alt={pTitle} className="h-full w-full object-contain" />
                   </Link>
-                  <p className="text-xs text-blue-500">{product.vendor}</p>
-                  <p className="text-sm font-bold text-gray-900">{product.price}$</p>
+
+                  <div className="flex min-w-0 flex-1 flex-col gap-1">
+                    <Link
+                      to={`/product/${pId}`}
+                      onClick={closeDrawer}
+                      className="line-clamp-1 text-sm font-semibold text-gray-900 hover:text-blue-600"
+                    >
+                      {pTitle}
+                    </Link>
+                    <p className="text-xs text-blue-500">{product.shop?.name || product.vendor}</p>
+                    <p className="text-sm font-bold text-gray-900">\${pPrice}</p>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        addToCart(product, 1);
+                        openDrawer('cart');
+                      }}
+                      className="mt-1 w-fit rounded bg-black px-3 py-1.5 text-xs font-semibold text-white transition-all hover:bg-gray-800 active:scale-95 cursor-pointer"
+                    >
+                      Add to cart
+                    </button>
+                  </div>
 
                   <button
                     type="button"
-                    onClick={() => {
-                      addToCart(product, 1);
-                      openDrawer('cart');
-                    }}
-                    className="mt-1 w-fit rounded bg-black px-3 py-1.5 text-xs font-semibold text-white transition-all hover:bg-gray-800 active:scale-95"
+                    onClick={() => toggleWishlist(pId)}
+                    aria-label="Remove from wishlist"
+                    className="self-start text-gray-400 transition-colors hover:text-red-500 cursor-pointer"
                   >
-                    Add to cart
+                    <FiTrash2 className="text-lg" />
                   </button>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => toggleWishlist(product.slug)}
-                  aria-label="Wishlist se hata dein"
-                  className="self-start text-gray-400 transition-colors hover:text-red-500"
-                >
-                  <FiTrash2 className="text-lg" />
-                </button>
-              </li>
-            ))}
+                </li>
+              );
+            })}
           </ul>
         )}
       </Shell>
