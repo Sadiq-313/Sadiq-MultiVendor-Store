@@ -25,13 +25,15 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="sticky top-0 z-50 w-full bg-[#3010d0] text-white shadow-md transition-all">
-      <div className="flex h-14 w-full items-center justify-between px-4 md:px-12">
-        <CategoryDropdown 
+    <nav className="site-nav sticky top-0 z-50 w-full text-white transition-all">
+      <div className="site-nav-inner flex h-14 w-full items-center justify-between px-4 md:px-12">
+        <div className="site-category-menu">
+        <CategoryDropdown
           onSelect={(name) => navigate(`/products?category=${encodeURIComponent(name)}`)} 
         />
+        </div>
 
-        <div className="hidden items-center space-x-8 md:flex">
+        <div className="site-nav-links flex items-center space-x-8">
           {navLinks.map((link) => (
             <NavLink
               key={link.name}
@@ -48,7 +50,7 @@ const Navbar = () => {
           ))}
         </div>
 
-        <div className="flex items-center space-x-6">
+        <div className="site-nav-actions flex items-center space-x-6">
           <button
             type="button"
             onClick={() => openDrawer('wishlist')}

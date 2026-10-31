@@ -44,9 +44,9 @@ const Login = () => {
   };
 
   return (
-    <div className="flex min-h-[80vh] items-center justify-center bg-[#f5f5f4] px-4 py-12">
-      <div className="w-full max-w-md rounded-xl bg-white p-8 shadow-lg border border-gray-100">
-        <h2 className="text-center text-2xl font-bold text-gray-900">Login to UrbanCart</h2>
+    <div className="auth-page flex min-h-[80vh] items-center justify-center px-4 py-12">
+      <div className="auth-card w-full max-w-md rounded-xl bg-white p-8 shadow-lg border border-gray-100">
+        <h2 className="auth-title text-center text-2xl font-bold text-gray-900">Login to UrbanCart</h2>
         <p className="mt-1 text-center text-xs text-gray-500">Welcome back! Please enter your details.</p>
 
         <form onSubmit={handleSubmit} className="mt-6 space-y-4">

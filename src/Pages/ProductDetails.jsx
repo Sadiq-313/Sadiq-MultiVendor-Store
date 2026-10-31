@@ -61,7 +61,7 @@ const ProductDetails = () => {
 
   if (loading) {
     return (
-      <main className="flex min-h-[60vh] items-center justify-center bg-[#f5f5f4] px-4 text-center">
+      <main className="product-details-page flex min-h-[60vh] items-center justify-center px-4 text-center">
         <p className="text-base font-semibold text-gray-600">Loading details...</p>
       </main>
     );
@@ -69,7 +69,7 @@ const ProductDetails = () => {
 
   if (!item) {
     return (
-      <main className="flex min-h-[60vh] flex-col items-center justify-center gap-4 bg-[#f5f5f4] px-4 text-center">
+      <main className="product-details-page flex min-h-[60vh] flex-col items-center justify-center gap-4 px-4 text-center">
         <h1 className="text-3xl font-bold text-[#1e40af]">Product or Event not found</h1>
         <Link
           to="/products"
@@ -104,9 +104,9 @@ const ProductDetails = () => {
   };
 
   return (
-    <main className="bg-[#f5f5f4]">
+    <main className="product-details-page">
       {/* ================= TOP: image + info ================= */}
-      <section className="bg-white">
+      <section className="product-detail-hero bg-white">
         <div className="mx-auto grid max-w-6xl grid-cols-1 gap-10 px-4 py-8 md:grid-cols-2 md:px-12">
           {/* Left side: Image Zoom */}
           <div>
@@ -197,7 +197,7 @@ const ProductDetails = () => {
       </section>
 
       {/* ================= TABS ================= */}
-      <section className="bg-blue-50/60">
+      <section className="product-detail-tabs">
         <div className="mx-auto max-w-6xl px-4 py-8 md:px-12">
           <div className="flex items-center justify-between border-b border-gray-200">
             {tabs.map((t) => (

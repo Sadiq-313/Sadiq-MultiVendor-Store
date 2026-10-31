@@ -25,7 +25,7 @@ const ProductCard = ({ product }) => {
   const pSold = product.sold_out || product.sold || 0;
 
   return (
-    <div className="group relative flex h-full flex-col rounded-lg border border-gray-200 bg-white p-3 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-blue-500 hover:shadow-lg">
+    <div className="product-card group relative flex h-full flex-col rounded-lg border border-gray-200 bg-white p-3 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-blue-500 hover:shadow-lg">
       <div className="absolute right-3 top-3 z-10 flex flex-col gap-3 text-gray-800">
         <button type="button" aria-label="Wishlist" className="transition-colors hover:text-red-500 cursor-pointer">
           <FiHeart className="text-lg" />
@@ -89,7 +89,7 @@ const BestSelling = () => {
   const sorted = [...products].sort((a, b) => (b.sold_out || b.sold || 0) - (a.sold_out || a.sold || 0));
 
   return (
-    <main className="min-h-screen bg-[#f5f5f4] px-4 py-6 md:px-12">
+    <main className="best-selling-page min-h-screen px-4 py-6 md:px-12">
       {loading ? (
         <div className="flex h-[50vh] items-center justify-center">
           <p className="text-sm font-semibold text-gray-600">Loading best selling products...</p>

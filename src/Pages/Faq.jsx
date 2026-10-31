@@ -78,11 +78,11 @@ const FAQ = () => {
   };
 
   return (
-    <main className="min-h-screen bg-[#f5f5f4] px-4 py-8 md:px-12">
+    <main className="faq-page min-h-screen px-4 py-8 md:px-12">
       <div className="mx-auto max-w-7xl">
         <h1 className="mb-6 text-2xl font-bold text-gray-900 md:text-3xl">FAQ</h1>
 
-        <div>
+        <div className="faq-list">
           {faqs.map((item, index) => (
             <FaqItem
               key={item.question}

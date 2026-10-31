@@ -76,10 +76,10 @@ const CreateShop = () => {
   };
 
   return (
-    <div className="flex min-h-[90vh] flex-col items-center justify-center bg-[#f8fafc] px-4 py-12">
-      <h2 className="mb-6 text-2xl font-extrabold text-slate-900">Register as a seller</h2>
+    <div className="auth-page flex min-h-[90vh] flex-col items-center justify-center px-4 py-12">
+      <h2 className="auth-title mb-6 text-2xl font-extrabold text-slate-900">Register as a seller</h2>
 
-      <div className="w-full max-w-md rounded-xl bg-white p-8 shadow-sm border border-slate-200/80">
+      <div className="auth-card w-full max-w-md rounded-xl bg-white p-8 shadow-sm border border-slate-200/80">
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-xs font-semibold text-slate-700 mb-1">

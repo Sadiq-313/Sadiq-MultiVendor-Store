@@ -59,21 +59,22 @@ const TopHeader = () => {
   };
 
   return (
-    <div className="w-full bg-[#f8f8f8] py-3 px-6 md:px-12 flex items-center justify-between gap-4">
+    <header className="site-header w-full py-3 px-6 md:px-12">
+      <div className="site-header-inner flex items-center justify-between gap-4">
       <div className="flex items-center">
         <Link to="/">
-          <span className="text-xl font-bold text-blue-700">UrbanCart</span>
+          <span className="site-logo text-xl font-bold">UrbanCart<span>.</span></span>
         </Link>
       </div>
 
-      <div ref={dropdownRef} className="flex-1 max-w-xl mx-4 relative">
+      <div ref={dropdownRef} className="site-search flex-1 max-w-xl mx-4 relative">
         <form onSubmit={handleSearchSubmit} className="relative w-full">
           <input
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search Product..."
-            className="w-full py-2 pl-4 pr-10 border border-[#3b82f6] rounded-md outline-none text-sm placeholder-gray-400 focus:ring-1 focus:ring-blue-500 bg-white"
+            className="site-search-input w-full py-2 pl-4 pr-10 border rounded-md outline-none text-sm placeholder-gray-400 bg-white"
           />
 
           {searchTerm ? (
@@ -92,7 +93,7 @@ const TopHeader = () => {
         </form>
 
         {isOpen && (
-          <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-50 max-h-80 overflow-y-auto">
+          <div className="site-search-results absolute left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-50 max-h-80 overflow-y-auto">
             {filteredProducts.length > 0 ? (
               filteredProducts.map((product) => (
                 <Link
@@ -129,17 +130,18 @@ const TopHeader = () => {
       </div>
 
       <div>
-        <Link to="/create-shop">
+        <Link to="/create-shop" className="seller-cta">
           <button 
             type="button" 
-            className="bg-black hover:bg-gray-800 text-white text-sm font-medium py-2.5 px-5 rounded-lg flex items-center gap-1 transition-all"
+            className="seller-cta-button text-sm font-medium py-2.5 px-5 rounded-lg flex items-center gap-1 transition-all"
           >
             Become Seller
             <FiChevronRight className="text-base" />
           </button>
         </Link>
       </div>
-    </div>
+      </div>
+    </header>
   );
 };
 

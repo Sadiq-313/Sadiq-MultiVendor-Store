@@ -107,24 +107,24 @@ const Home = () => {
   const headingClass = 'mb-8 text-center text-2xl font-bold text-[#1e40af] md:text-3xl';
 
   return (
-    <div className="flex min-h-screen w-full flex-col items-center gap-12 bg-[#f8f9fa] px-4 py-8 font-sans md:px-12">
+    <div className="home-page flex min-h-screen w-full flex-col items-center gap-12 px-4 py-8 font-sans md:px-12">
       {/* 1. HERO */}
-      <section className="relative w-full max-w-7xl overflow-hidden rounded-2xl bg-gradient-to-br from-blue-50 via-white to-sky-50">
+      <section className="home-hero relative w-full max-w-7xl overflow-hidden rounded-2xl">
         <div className="pointer-events-none absolute -left-24 -top-24 h-72 w-72 rounded-full bg-blue-200/40 blur-3xl" />
         <div className="pointer-events-none absolute bottom-0 right-0 h-72 w-72 rounded-full bg-sky-200/40 blur-3xl" />
 
         <div className="relative grid grid-cols-1 items-center gap-10 px-6 py-12 md:grid-cols-2 md:py-16">
           <div className="flex flex-col items-center space-y-6 text-center md:items-start md:text-left">
-            <span className="inline-flex items-center gap-2 rounded-full bg-blue-100 px-4 py-1.5 text-xs font-semibold text-blue-700 md:text-sm">
+            <span className="hero-eyebrow inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-semibold md:text-sm">
               <span className="h-2 w-2 rounded-full bg-green-500" />
               Pakistan's Trusted Marketplace
             </span>
 
-            <h1 className="text-4xl font-extrabold leading-tight text-[#1e40af] md:text-5xl lg:text-6xl">
+            <h1 className="hero-title text-4xl font-extrabold leading-tight md:text-5xl lg:text-6xl">
               Sadiq MultiVendor Store
             </h1>
 
-            <p className="max-w-lg text-base leading-relaxed text-gray-600 md:text-lg">
+            <p className="hero-copy max-w-lg text-base leading-relaxed md:text-lg">
               Your ultimate shopping destination, powered by the best vendors around.
               Browse, compare, and buy with confidence because great products and
               great sellers belong together.
@@ -133,14 +133,14 @@ const Home = () => {
             <div className="flex flex-wrap justify-center gap-4 md:justify-start">
               <Link
                 to="/products"
-                className="inline-block rounded-lg bg-gradient-to-r from-[#3b82f6] to-[#1e40af] px-8 py-3 text-center text-sm font-semibold text-white shadow-md transition-all hover:-translate-y-0.5 hover:shadow-xl focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-300 active:scale-95 md:text-base"
+                className="hero-primary inline-block rounded-lg px-8 py-3 text-center text-sm font-semibold shadow-md transition-all hover:-translate-y-0.5 hover:shadow-xl active:scale-95 md:text-base"
               >
                 Shop Now
               </Link>
 
               <Link
                 to="/create-shop"
-                className="inline-block rounded-lg border-2 border-blue-600 px-8 py-3 text-center text-sm font-semibold text-blue-700 transition-all hover:bg-[#3b00e3] hover:text-white focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-300 active:scale-95 md:text-base"
+                className="hero-secondary inline-block rounded-lg border-2 px-8 py-3 text-center text-sm font-semibold transition-all active:scale-95 md:text-base"
               >
                 Become a Vendor
               </Link>
@@ -164,14 +164,14 @@ const Home = () => {
             <img
               src={storeHeroImg}
               alt="Pak MultiVendor Store hero banner"
-              className="w-full max-w-md object-contain mix-blend-multiply drop-shadow-xl md:max-w-lg"
+              className="hero-art w-full max-w-md object-contain drop-shadow-xl md:max-w-lg"
             />
           </div>
         </div>
       </section>
 
       {/* 2. FEATURES BAR */}
-      <section className="w-full max-w-7xl rounded-xl bg-gradient-to-r from-[#3b82f6] to-[#1e40af] px-6 py-6 text-white shadow-md md:px-10">
+      <section className="features-strip w-full max-w-7xl rounded-xl px-6 py-6 text-white shadow-md md:px-10">
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {features.map(({ icon: Icon, title, desc }) => (
             <div key={title} className="flex items-center space-x-4">
@@ -186,14 +186,14 @@ const Home = () => {
       </section>
 
       {/* 3. SHOP BY CATEGORIES */}
-      <section className="w-full max-w-7xl rounded-2xl bg-white p-6 shadow-md">
-        <h2 className={headingClass}>Shop by Categories</h2>
+      <section className="home-categories w-full max-w-7xl rounded-2xl bg-white p-6 shadow-md">
+        <h2 className={`${headingClass} section-heading`}>Shop by Categories</h2>
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-5">
           {categories.map((cat) => (
             <Link
               key={cat.title}
               to={`/products?category=${encodeURIComponent(cat.title)}`}
-              className="group flex h-36 cursor-pointer flex-col items-center justify-center rounded-xl border border-gray-100 bg-white p-4 text-center shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-blue-500 hover:shadow-lg"
+              className="category-card group flex h-36 cursor-pointer flex-col items-center justify-center rounded-xl border border-gray-100 bg-white p-4 text-center shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-blue-500 hover:shadow-lg"
             >
               <img
                 src={cat.img}
@@ -210,7 +210,7 @@ const Home = () => {
 
       {/* 4. BEST DEALS */}
       <section className="w-full max-w-7xl">
-        <h2 className={headingClass}>Best Deals</h2>
+        <h2 className={`${headingClass} section-heading`}>Best Deals</h2>
         {loading ? (
           <div className="text-center py-10 text-sm text-gray-500">Loading best deals...</div>
         ) : bestDeals.length === 0 ? (
@@ -228,9 +228,9 @@ const Home = () => {
       {popularEvent && (
         <section
           onClick={openEvent}
-          className="w-full max-w-7xl cursor-pointer rounded-xl border border-gray-100 bg-white p-6 shadow-sm transition-all duration-300 hover:border-blue-500 hover:shadow-lg md:p-8"
+          className="home-event w-full max-w-7xl cursor-pointer rounded-xl border border-gray-100 bg-white p-6 shadow-sm transition-all duration-300 hover:border-blue-500 hover:shadow-lg md:p-8"
         >
-          <h2 className="mb-6 text-center text-2xl font-bold text-[#1e40af] md:text-3xl">Popular Event</h2>
+          <h2 className="section-heading mb-6 text-center text-2xl font-bold md:text-3xl">Popular Event</h2>
           <div className="grid grid-cols-1 items-center gap-8 md:grid-cols-2">
             <div className="flex justify-center">
               <img
@@ -286,7 +286,7 @@ const Home = () => {
 
       {/* 6. FEATURED PRODUCTS */}
       <section className="w-full max-w-7xl">
-        <h2 className={headingClass}>Featured Products</h2>
+        <h2 className={`${headingClass} section-heading`}>Featured Products</h2>
         {loading ? (
           <div className="text-center py-10 text-sm text-gray-500">Loading featured products...</div>
         ) : featuredProducts.length === 0 ? (
@@ -301,8 +301,8 @@ const Home = () => {
       </section>
 
       {/* 7. BRAND LOGOS */}
-      <section className="w-full max-w-7xl rounded-2xl border border-gray-100 bg-white px-6 py-10 shadow-sm">
-        <h2 className="mb-8 text-center text-xl font-bold text-[#1e40af] md:text-3xl">Our Top Brands</h2>
+      <section className="brand-strip w-full max-w-7xl rounded-2xl border border-gray-100 bg-white px-6 py-10 shadow-sm">
+        <h2 className="section-heading mb-8 text-center text-xl font-bold md:text-3xl">Our Top Brands</h2>
         <div className="flex flex-wrap items-center justify-around gap-x-10 gap-y-4">
           {brands.map((brand, idx) => (
             <div

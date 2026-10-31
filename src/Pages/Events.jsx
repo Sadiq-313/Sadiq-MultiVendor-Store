@@ -16,7 +16,7 @@ const EventCard = ({ event }) => {
   const eSold = event.sold_out || event.sold || 0;
 
   return (
-    <div className="grid grid-cols-1 items-center gap-4 rounded-lg border border-gray-100 bg-white p-4 shadow-sm transition-all duration-300 hover:border-blue-500 hover:shadow-lg md:grid-cols-2 md:p-5">
+    <div className="event-card grid grid-cols-1 items-center gap-4 rounded-lg border border-gray-100 bg-white p-4 shadow-sm transition-all duration-300 hover:border-blue-500 hover:shadow-lg md:grid-cols-2 md:p-5">
       {/* Left: image */}
       <Link to={`/product/${eId}`} className="flex items-center justify-center">
         <img src={eImg} alt={eTitle} className="h-40 w-auto max-w-full object-contain md:h-48" />
@@ -80,7 +80,7 @@ const Events = () => {
   }, []);
 
   return (
-    <main className="min-h-screen bg-[#f5f5f4] px-4 py-6 md:px-12">
+    <main className="events-page min-h-screen px-4 py-6 md:px-12">
       {loading ? (
         <div className="flex h-[50vh] items-center justify-center">
           <p className="text-sm font-semibold text-gray-600">Loading events...</p>

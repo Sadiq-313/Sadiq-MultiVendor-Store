@@ -192,9 +192,9 @@ const SellerDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 p-4 md:p-10">
+    <div className="seller-dashboard min-h-screen p-4 md:p-10">
       {/* Top Header / Profile Bar */}
-      <div className="max-w-6xl mx-auto bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-8 flex flex-wrap items-center justify-between gap-4">
+      <div className="seller-profile max-w-6xl mx-auto bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-8 flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           <img
             src={user.avatar?.url || user.avatar || 'https://via.placeholder.com/150'}
@@ -217,7 +217,7 @@ const SellerDashboard = () => {
 
       <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Left Side: Upload Product Form */}
-        <div className="lg:col-span-5 bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+        <div className="seller-panel lg:col-span-5 bg-white rounded-xl shadow-sm border border-slate-200 p-6">
           <h2 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
             <FiPlus className="text-slate-900" /> Add New Product
           </h2>
@@ -356,7 +356,7 @@ const SellerDashboard = () => {
         </div>
 
         {/* Right Side: List of Current Seller's Products */}
-        <div className="lg:col-span-7 bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+        <div className="seller-panel lg:col-span-7 bg-white rounded-xl shadow-sm border border-slate-200 p-6">
           <h2 className="text-lg font-bold text-slate-900 mb-4 flex items-center justify-between">
             <span className="flex items-center gap-2">
               <FiPackage className="text-slate-900" /> My Live Products

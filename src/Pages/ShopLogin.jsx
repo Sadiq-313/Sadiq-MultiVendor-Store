@@ -49,10 +49,10 @@ const ShopLogin = () => {
   };
 
   return (
-    <div className="flex min-h-[80vh] flex-col items-center justify-center bg-[#f8fafc] px-4 py-12">
-      <h2 className="mb-6 text-2xl font-extrabold text-slate-900">Sign in to your shop</h2>
+    <div className="auth-page flex min-h-[80vh] flex-col items-center justify-center px-4 py-12">
+      <h2 className="auth-title mb-6 text-2xl font-extrabold text-slate-900">Sign in to your shop</h2>
 
-      <div className="w-full max-w-md rounded-xl bg-white p-8 shadow-sm border border-slate-200/80">
+      <div className="auth-card w-full max-w-md rounded-xl bg-white p-8 shadow-sm border border-slate-200/80">
         {errorMsg && (
           <div className="mb-4 rounded-md bg-red-50 p-3 text-xs text-red-600 border border-red-200">
             {errorMsg}

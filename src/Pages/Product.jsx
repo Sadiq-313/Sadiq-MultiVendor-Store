@@ -41,7 +41,7 @@ const ProductCard = ({ product }) => {
   const pSold = product.sold_out || product.sold || 0;
 
   return (
-    <div className="group relative flex h-full flex-col rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-indigo-500 hover:shadow-xl">
+    <div className="product-card group relative flex h-full flex-col rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-indigo-500 hover:shadow-xl">
       <div className="absolute right-3 top-3 z-10 flex flex-col gap-3 text-slate-700">
         <button
           type="button"
@@ -169,7 +169,7 @@ const Products = () => {
     : [...products].sort((a, b) => (b.sold_out || b.sold || 0) - (a.sold_out || a.sold || 0));
 
   return (
-    <main className="min-h-screen bg-slate-50 px-4 py-8 md:px-12">
+    <main className="products-page min-h-screen px-4 py-8 md:px-12">
       <div className="mx-auto max-w-7xl">
         {loading ? (
           <div className="flex h-[55vh] items-center justify-center">

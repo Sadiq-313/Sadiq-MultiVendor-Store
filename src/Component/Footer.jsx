@@ -37,27 +37,27 @@ const Footer = () => {
   };
 
   return (
-    <footer className="w-full">
-      <div className="bg-[#3329c9]">
+    <footer className="site-footer w-full">
+      <div className="site-newsletter">
         <div className="flex flex-col items-center justify-between gap-6 px-6 py-10 md:flex-row md:px-10">
-          <h2 className="text-center text-3xl font-semibold leading-snug text-white md:text-left md:text-4xl">
-            <span className="text-[#4ade80]">Subscribe</span> us for get news
+          <h2 className="newsletter-title text-center text-3xl font-semibold leading-snug text-white md:text-left md:text-4xl">
+            <span>Subscribe</span> us for get news
             <br className="hidden md:block" /> events and offers
           </h2>
 
-          <form onSubmit={handleSubmit} className="flex w-full max-w-lg items-center gap-4">
+          <form onSubmit={handleSubmit}           className="newsletter-form flex w-full max-w-lg items-center gap-4">
             <input
               type="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Enter your email..."
-              className="w-full rounded-md bg-white px-3 py-3 text-sm text-gray-800 outline-none placeholder:text-gray-400 focus:ring-4 focus:ring-blue-300"
+              className="newsletter-input w-full rounded-md bg-white px-3 py-3 text-sm text-gray-800 outline-none placeholder:text-gray-400"
             />
             <button
               type="submit"
               disabled={loading}
-              className="rounded-md bg-[#4ade80] px-6 py-3 text-sm font-medium text-white transition-all hover:bg-green-500 active:scale-95 disabled:opacity-50"
+              className="newsletter-button rounded-md px-6 py-3 text-sm font-semibold transition-all active:scale-95 disabled:opacity-50"
             >
               {loading ? "Submitting..." : "Submit"}
             </button>
@@ -65,7 +65,7 @@ const Footer = () => {
         </div>
       </div>
 
-      <div className="bg-black">
+      <div className="footer-main">
         <div className="mx-auto grid max-w-6xl grid-cols-2 gap-8 px-6 py-8 md:grid-cols-3 md:px-10">
           {columns.map((col, i) => (
             <div

@@ -13,7 +13,7 @@ const Shell = ({ open, onClose, icon: Icon, title, children, footer }) => (
     />
     <aside
       aria-hidden={!open}
-      className={`fixed right-0 top-0 z-[70] flex h-full w-full max-w-sm flex-col bg-white shadow-2xl transition-[transform,visibility] duration-300 ${
+      className={`drawer-panel fixed right-0 top-0 z-[70] flex h-full w-full max-w-sm flex-col bg-white shadow-2xl transition-[transform,visibility] duration-300 ${
         open ? 'visible translate-x-0' : 'invisible translate-x-full'
       }`}
     >

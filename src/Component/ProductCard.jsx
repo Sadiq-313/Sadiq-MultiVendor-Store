@@ -31,7 +31,7 @@ const ProductCard = ({ product }) => {
   return (
     <Link
       to={`/product/${identifier}`}
-      className="group relative flex h-full flex-col rounded-lg border border-gray-200 bg-white p-3 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-blue-500 hover:shadow-lg"
+      className="product-card group relative flex h-full flex-col rounded-lg border border-gray-200 bg-white p-3 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-blue-500 hover:shadow-lg"
     >
       <div className="absolute right-3 top-3 z-10 flex flex-col gap-3 text-gray-800">
         <button
