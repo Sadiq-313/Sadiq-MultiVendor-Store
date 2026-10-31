@@ -24,7 +24,7 @@ const Signup = () => {
 
     try {
       setLoading(true);
-      const { data } = await axios.post(`${server}/user/create-user`, {
+      const { data } = await axios.post(`${server}/api/v2/seller/createSeller`, {
         name,
         email,
         password,

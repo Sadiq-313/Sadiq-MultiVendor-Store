@@ -24,7 +24,7 @@ const Login = () => {
     try {
       setLoading(true);
       const { data } = await axios.post(
-        `${server}/user/login-user`,
+        `${server}/user/loginSeller`,
         { email, password },
         { withCredentials: true }
       );
