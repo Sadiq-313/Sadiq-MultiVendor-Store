@@ -23,21 +23,21 @@ const ShopLogin = () => {
     try {
       setLoading(true);
       const { data } = await axios.post(
-        `${server}/shop/login-shop`,
-        { email, password },
-        { withCredentials: true }
+        `${server}/api/v2/seller/loginSeller`,
+        { email, password }
       );
 
-      if (data.success || data.token) {
-        const shopData = data.shop || { email };
-        if (login) login(shopData);
-        localStorage.setItem('active_seller', JSON.stringify(shopData));
+      if (data.success && data.seller) {
+        const { _id, shopName, email: sellerEmail, phoneNumber, address, zipCode, avatar, role } = data.seller;
+        const shopData = { _id, shopName, email: sellerEmail, phoneNumber, address, zipCode, avatar, role };
+        login(shopData);
 
         if (notify) notify(`Welcome back, ${shopData.shopName || shopData.name || 'Seller'}!`, 'cart');
         navigate('/seller-dashboard');
       } else {
-        setErrorMsg(data.message || 'Invalid email or password.');
-        if (notify) notify(data.message || 'Invalid credentials!', 'error');
+        const message = data.message || 'Invalid email or password.';
+        setErrorMsg(message);
+        if (notify) notify(message, 'error');
       }
     } catch (error) {
       const errorMsgText = error.response?.data?.message || 'Login failed! Please check your credentials.';

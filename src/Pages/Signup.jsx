@@ -32,6 +32,7 @@ const Signup = () => {
 
       if (data.success) {
         notify(data.message || 'Account created successfully! Please check your email.', 'cart');
+      
         navigate('/login');
       } else {
         notify(data.message || 'Signup failed', 'error');

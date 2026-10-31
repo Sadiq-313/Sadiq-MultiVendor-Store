@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FiEye, FiEyeOff, FiUser } from 'react-icons/fi';
+import axios from 'axios';
+import { server } from '../config';
 import { useShop } from '../context/ShopContext';
 
 const CreateShop = () => {
@@ -16,6 +18,7 @@ const CreateShop = () => {
   const [avatarFile, setAvatarFile] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
   const [imageError, setImageError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const { notify } = useShop();
   const navigate = useNavigate();
@@ -37,36 +40,39 @@ const CreateShop = () => {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!avatar) {
+    if (!avatarFile) {
       setImageError('Please upload a shop avatar/image to continue.');
       if (notify) notify('Please upload a shop image!', 'error');
       return;
     }
 
-    const existingShops = JSON.parse(localStorage.getItem('registered_shops') || '[]');
+    try {
+      setLoading(true);
+      const payload = new FormData();
+      Object.entries(formData).forEach(([key, value]) => payload.append(key, value));
+      payload.append('avatar', avatarFile);
 
-    const isAlreadyRegistered = existingShops.some(
-      (shop) => shop.email.toLowerCase() === formData.email.toLowerCase()
-    );
+      const { data } = await axios.post(
+        `${server}/api/v2/seller/createSeller`,
+        payload
+      );
 
-    if (isAlreadyRegistered) {
-      if (notify) notify('This email is already registered as a seller!', 'error');
-      return;
+      if (!data.success) {
+        notify(data.message || 'Shop registration failed.', 'error');
+        return;
+      }
+
+      localStorage.removeItem('registered_shops');
+      notify(data.message || 'Shop registered successfully! Please login.', 'cart');
+      navigate('/shop-login');
+    } catch (error) {
+      notify(error.response?.data?.message || 'Shop registration failed. Please try again.', 'error');
+    } finally {
+      setLoading(false);
     }
-
-    const newShop = {
-      ...formData,
-      avatar,
-      id: Date.now(),
-    };
-
-    localStorage.setItem('registered_shops', JSON.stringify([...existingShops, newShop]));
-
-    if (notify) notify('Shop registered successfully! Please login.', 'cart');
-    navigate('/shop-login');
   };
 
   return (
@@ -194,9 +200,10 @@ const CreateShop = () => {
 
           <button
             type="submit"
-            className="w-full rounded-md bg-[#3b00e3] py-2.5 text-xs font-semibold text-white transition-colors hover:bg-indigo-700 mt-2 cursor-pointer"
+            disabled={loading}
+            className="w-full rounded-md bg-[#3b00e3] py-2.5 text-xs font-semibold text-white transition-colors hover:bg-indigo-700 mt-2 disabled:opacity-50 cursor-pointer"
           >
-            Submit
+            {loading ? 'Creating account...' : 'Submit'}
           </button>
         </form>
 

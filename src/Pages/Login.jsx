@@ -24,13 +24,13 @@ const Login = () => {
     try {
       setLoading(true);
       const { data } = await axios.post(
-        `${server}/user/loginSeller`,
-        { email, password },
-        { withCredentials: true }
+        `${server}/api/v2/seller/loginSeller`,
+        { email, password }
       );
 
-      if (data.success || data.token) {
-        if (login) login(data.user || { email });
+      if (data.success && data.seller) {
+        const { _id, shopName, email: sellerEmail, phoneNumber, address, zipCode, avatar, role } = data.seller;
+        login({ _id, shopName, email: sellerEmail, phoneNumber, address, zipCode, avatar, role });
         notify('Logged in successfully!', 'cart');
         navigate('/');
       } else {
